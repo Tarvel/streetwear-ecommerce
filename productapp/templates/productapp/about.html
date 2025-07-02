@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}About Wimer{% endblock %}
+{% block content %}
+  <!-- About Section -->
+  <section class="py-12">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold font-heading mb-4">About Wimer</h2>
+      <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
+        Discover the story behind our streetwear brand and what drives us to create bold, authentic fashion.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+      <!-- Brand Story -->
+      <div>
+        <h3 class="text-2xl font-semibold font-heading mb-4">Our Story</h3>
+        <p class="text-gray-600 dark:text-gray-300 font-body mb-4">
+          {% if brand_story %}
+            {{ brand_story|safe }}
+          {% else %}
+            Wimer was born in the heart of the urban jungle, where creativity meets grit. Founded in 2023, our mission is to craft streetwear that speaks to the bold, the dreamers, and the trendsetters. Every piece we design is a statement, blending modern aesthetics with timeless comfort.
+          {% endif %}
+        </p>
+      </div>
+      <!-- Brand Values -->
+      <div>
+        <h3 class="text-2xl font-semibold font-heading mb-4">Our Values</h3>
+        <ul class="text-gray-600 dark:text-gray-300 font-body space-y-2">
+          {% for value in brand_values %}
+            <li class="flex items-center">
+              <i class="fas fa-check text-accent mr-2"></i>
+              <span>{{ value }}</span>
+            </li>
+          {% empty %}
+            <li class="flex items-center"><i class="fas fa-check text-accent mr-2"></i><span>Authenticity: We stay true to our roots.</span></li>
+            <li class="flex items-center"><i class="fas fa-check text-accent mr-2"></i><span>Quality: Premium materials, crafted with care.</span></li>
+            <li class="flex items-center"><i class="fas fa-check text-accent mr-2"></i><span>Community: We vibe with our crew, always.</span></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <!-- Optional Image or Visual -->
+    <div class="mt-12 text-center">
+      <img src="{% static 'images/about-banner.jpg' %}" alt="Wimer Brand" class="w-full max-w-3xl mx-auto h-64 object-cover rounded-lg shadow-md">
+    </div>
+  </section>
+{% endblock %}

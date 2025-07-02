@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Events{% endblock %}
+{% block content %}
+  <!-- Events Section -->
+  <section class="py-12">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold font-heading mb-4">Wimer Events</h2>
+      <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
+        Join us for exclusive fashion shows, product launches, and community vibes. Check out our upcoming and past events!
+      </p>
+    </div>
+    <!-- Upcoming Events -->
+    <div class="mb-12">
+      <h3 class="text-2xl font-semibold font-heading mb-6 text-center">Upcoming Events</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for event in upcoming_events %}
+          <div class="border rounded-lg p-6 shadow-md hover:shadow-lg transition">
+            <img src="{{ event.image.url|default:'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop' }}" alt="{{ event.name }}" class="w-full h-48 object-cover rounded-md mb-4">
+            <h4 class="text-xl font-semibold font-heading">{{ event.name }}</h4>
+            <p class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ event.date|date:"F d, Y" }}</p>
+            <p class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ event.location }}</p>
+            <p class="text-gray-600 dark:text-gray-300 font-body mb-4">{{ event.description|truncatewords:30 }}</p>
+            <a href="{% url 'event_detail' event.id %}" class="text-accent hover:underline font-body">Learn More</a>
+          </div>
+        {% empty %}
+          <p class="text-gray-600 dark:text-gray-300 font-body text-center">No upcoming events. Stay tuned for updates!</p>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Past Events -->
+    <div>
+      <h3 class="text-2xl font-semibold font-heading mb-6 text-center">Past Events</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for event in past_events %}
+          <div class="border rounded-lg p-6 shadow-md hover:shadow-lg transition">
+            <img src="{{ event.image.url|default:'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop' }}" alt="{{ event.name }}" class="w-full h-48 object-cover rounded-md mb-4">
+            <h4 class="text-xl font-semibold font-heading">{{ event.name }}</h4>
+            <p class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ event.date|date:"F d, Y" }}</p>
+            <p class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ event.location }}</p>
+            <p class="text-gray-600 dark:text-gray-300 font-body mb-4">{{ event.description|truncatewords:30 }}</p>
+            <a href="{% url 'event_detail' event.id %}" class="text-accent hover:underline font-body">View Highlights</a>
+          </div>
+        {% empty %}
+          <p class="text-gray-600 dark:text-gray-300 font-body text-center">No past events available.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

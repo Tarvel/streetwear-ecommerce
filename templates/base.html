@@ -1,0 +1,300 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="{% if request.session.theme == 'dark' %}dark{% endif %}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wimer - {% block title %}Streetwear{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#f5f5f5',
+            dark: '#1f2937',
+            accent: '#e63946',
+          },
+          fontFamily: {
+            heading: ['Bebas Neue', 'sans-serif'],
+            body: ['Montserrat', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;600&display=swap">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-body flex flex-col min-h-screen">
+  <!-- Theme Toggle -->
+  <button id="theme-toggle" class="fixed bottom-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 z-50">
+    <i id="theme-icon" class="fas fa-moon"></i>
+  </button>
+
+  <!-- Site Name -->
+  <header class="text-center py-1">
+    <a href="{% url 'home' %}">
+    <img src="{% static 'images/wimer_logo.png' %}" alt="Wimer Logo" class="mx-auto w-48 h-48">
+  </a>
+  </header>
+
+  <!-- Navbar -->
+  <nav class="bg-white dark:bg-gray-900 bg-opacity-90 dark:bg-opacity-90 shadow sticky top-0 z-30">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <!-- Left Side: Hamburger (Mobile) & Search (Desktop) -->
+      <div class="flex items-center space-x-4">
+        <!-- Hamburger Menu Button -->
+        <button id="menu-toggle" class="text-xl md:hidden hover:text-accent dark:hover:text-accent">
+          <i class="fas fa-bars"></i>
+        </button>
+        <!-- Search Icon (visible on desktop) -->
+        <button id="search-toggle-desktop" class="text-xl hidden md:block hover:text-accent dark:hover:text-accent"><i class="fas fa-search"></i></button>
+      </div>
+
+      <!-- Center Menu Items (Desktop) -->
+      <ul class="hidden md:flex space-x-8 justify-center flex-1">
+        <li class="relative group">
+          <a href="{% url 'shop' %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Shop</a>
+          <!-- Dropdown -->
+          <ul class="absolute hidden group-hover:block bg-white dark:bg-gray-900 shadow-lg rounded overflow-hidden w-48">
+            {% for drop in drops %}
+            <li class="{% if not forloop.last %}border-b border-gray-200 dark:border-gray-700{% endif %}">
+              <a href="{% url 'shop_drop' drop %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">{{ drop }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </li>
+        <li><a href="" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Gallery</a></li>
+        <li><a href="" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">About</a></li>
+        <li><a href="" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Events</a></li>
+      </ul>
+
+      <!-- Right Side Icons -->
+      <div class="flex items-center space-x-4 md:space-x-6">
+          <!-- Search Icon (Mobile) -->
+          <button id="search-toggle-mobile" class="text-xl md:hidden hover:text-accent dark:hover:text-accent"><i class="fas fa-search"></i></button>
+          
+          {% if request.user.is_authenticated %}
+             <a href="{% url 'cart' %}" class="hover:text-accent dark:hover:text-accent"><i class="fas fa-shopping-cart text-xl"></i></a>
+          {% endif %}
+            
+         
+
+          <!-- User Icon with Dropdown (Desktop) -->
+          <div class="relative group hidden md:block">
+              <button class="text-xl hover:text-accent dark:hover:text-accent"><i class="fas fa-user"></i></button>
+              <ul class="absolute hidden group-hover:block bg-white dark:bg-gray-900 shadow-lg rounded overflow-hidden right-0 w-40">
+                  {% if user.is_authenticated %}
+                      <li class="border-b border-gray-200 dark:border-gray-700">
+                          <a href="" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Settings</a>
+                      </li>
+                      <li class="border-b border-gray-200 dark:border-gray-700">
+                          <a href="" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">History</a>
+                      </li>
+                      <li>
+                          <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Logout</a>
+                      </li>
+                  {% else %}
+                      <li>
+                          <a href="{% url 'login' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Login</a>
+                      </li>
+                  {% endif %}
+              </ul>
+          </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Sidebar Menu -->
+  <div id="mobile-menu" class="fixed top-0 left-0 w-3/4 max-w-sm h-full bg-white dark:bg-gray-900 shadow-lg z-50 transform -translate-x-full transition-transform duration-300 ease-in-out">
+    <!-- Sidebar Header -->
+    <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+      <h2 class="font-heading text-2xl font-bold">Menu</h2>
+      <button id="close-menu" class="text-2xl hover:text-accent dark:hover:text-accent"><i class="fas fa-times"></i></button>
+    </div>
+    <!-- Sidebar Links -->
+    <div class="p-4 overflow-y-auto h-[calc(100vh-65px)]">
+      <ul class="space-y-4">
+        <li><a href="{% url 'shop' %}" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Shop</a></li>
+        <li><a href="" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Gallery</a></li>
+        <li><a href="" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">About</a></li>
+        <li><a href="" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Events</a></li>
+      </ul>
+      <hr class="my-6 border-gray-300 dark:border-gray-600">
+      <h3 class="font-heading text-xl font-bold mb-4 uppercase">Account</h3>
+      <ul class="space-y-4 font-body">
+        {% if user.is_authenticated %}
+          <li><a href="" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-cog fa-fw w-5"></i><span>Settings</span></a></li>
+          <li><a href="" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-history fa-fw w-5"></i><span>History</span></a></li>
+          
+              <li><a href="{% url 'logout' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-sign-out-alt fa-fw w-5"></i><span>Logout</span></a></li>
+          {% else %}
+              <li><a href="{% url 'login' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-sign-in-alt fa-fw w-5"></i><span>Login</span></a></li>
+          {% endif %}
+      </ul>
+    </div>
+  </div>
+  <!-- Overlay for Mobile Menu -->
+  <div id="menu-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+
+  <!-- Search Modal -->
+ <div id="search-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-20 z-50 hidden">
+  <div class="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-bold font-heading">Search Wimer</h2>
+      <button id="close-modal" class="text-gray-600 dark:text-gray-300 hover:text-accent dark:hover:text-accent">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+    <form method="get" action="{% url 'search' %}" class="flex items-center space-x-2">
+      <input type="text" name="q" placeholder="Search for products..." class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent">
+      <button type="submit" class="p-3 bg-gray-800 dark:bg-gray-600 text-white rounded-md font-body hover:bg-accent dark:hover:bg-accent transition">
+        <i class="fas fa-search"></i>
+      </button>
+    </form>
+  </div>
+</div>
+
+
+<!-- Flash message -->
+{% if messages %}
+  <div id="flash-messages" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2 max-w-sm w-full px-4">
+    {% for message in messages %}
+      <div class="flash-message relative p-3 rounded-md shadow-md flex items-start justify-between
+        text-sm font-medium opacity-0 transition-opacity duration-500
+        {% if message.tags == 'error' %}
+          bg-red-100 text-red-800
+        {% else %}
+          bg-black text-white
+        {% endif %}">
+        <span>{{ message }}</span>
+        <button onclick="this.parentElement.remove()" class="ml-4 text-xl leading-none hover:text-red-500">
+          &times;
+        </button>
+      </div>
+    {% endfor %}
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const flashMessages = document.querySelectorAll('.flash-message');
+
+      flashMessages.forEach((msg, index) => {
+        // Delay fade-in
+        setTimeout(() => {
+          msg.classList.remove('opacity-0');
+          msg.classList.add('opacity-100');
+        }, 100); 
+
+        // Auto fade-out after 4 seconds
+        setTimeout(() => {
+          msg.classList.remove('opacity-100');
+          msg.classList.add('opacity-0');
+          // Remove from DOM after fade-out
+          setTimeout(() => msg.remove(), 500);
+        }, 3000 + index * 200); // Stagger if multiple messages
+      });
+    });
+  </script>
+{% endif %}
+
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8 flex-grow">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 dark:bg-gray-900 py-6">
+    <div class="container mx-auto px-4 text-center">
+      <!-- Subscribe Form -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-2 font-heading">Join the Wimer Crew</h3>
+        <form action="" method="post" class="flex justify-center">
+          {% csrf_token %}
+          <input type="email" name="email" placeholder="Enter your email" class="p-2 rounded-l-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 font-body">
+          <button type="submit" class="p-2 bg-gray-800 dark:bg-gray-600 text-white rounded-r-md font-body">Join Up</button>
+        </form>
+      </div>
+      <!-- Social Media Links -->
+      <div class="flex justify-center space-x-4">
+        <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram text-2xl hover:text-accent dark:hover:text-accent"></i></a>
+        <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook text-2xl hover:text-accent dark:hover:text-accent"></i></a>
+        <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter text-2xl hover:text-accent dark:hover:text-accent"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Theme Toggle and Modal Script -->
+  <script>
+    // Theme Toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    const themeIcon = document.getElementById('theme-icon');
+    themeIcon.classList.toggle('fa-moon');
+    {% comment %} {% url 'toggle_theme' %} {% endcomment %}
+    themeIcon.classList.toggle('fa-sun');
+    fetch('', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+      body: JSON.stringify({ theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' }),
+    });
+  });
+
+    // Search Modal Logic
+    const searchModal = document.getElementById('search-modal');
+    const closeModal = document.getElementById('close-modal');
+    const searchToggleDesktop = document.getElementById('search-toggle-desktop');
+    const searchToggleMobile = document.getElementById('search-toggle-mobile');
+
+    const openSearchModal = () => searchModal.classList.remove('hidden');
+    const closeSearchModal = () => searchModal.classList.add('hidden');
+
+    searchToggleDesktop.addEventListener('click', openSearchModal);
+    searchToggleMobile.addEventListener('click', openSearchModal);
+    closeModal.addEventListener('click', closeSearchModal);
+
+    searchModal.addEventListener('click', (e) => {
+      if (e.target === searchModal) {
+        closeSearchModal();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !searchModal.classList.contains('hidden')) {
+        closeSearchModal();
+      }
+    });
+
+    // Mobile Menu Logic
+    const menuToggle = document.getElementById('menu-toggle');
+    const closeMenu = document.getElementById('close-menu');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuOverlay = document.getElementById('menu-overlay');
+
+    const showMobileMenu = () => {
+        mobileMenu.classList.remove('-translate-x-full');
+        menuOverlay.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden'); // Prevent body scroll
+    };
+
+    const hideMobileMenu = () => {
+        mobileMenu.classList.add('-translate-x-full');
+        menuOverlay.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden'); // Re-enable body scroll
+    };
+
+    menuToggle.addEventListener('click', showMobileMenu);
+    closeMenu.addEventListener('click', hideMobileMenu);
+    menuOverlay.addEventListener('click', hideMobileMenu);
+  </script>
+</body>
+</html>

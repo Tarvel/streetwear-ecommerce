@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Cart{% endblock %}
+{% block content %}
+{% load humanize %}
+  <!-- Cart Section -->
+  <section class="py-12">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold font-heading mb-4">Your Cart</h2>
+      <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
+        Review your selected items and proceed to checkout.
+      </p>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+      {% if cart_items %}
+        <!-- Cart Items -->
+        <div class="border rounded-lg shadow-md mb-8">
+          <div class="hidden md:grid md:grid-cols-6 gap-4 bg-gray-100 dark:bg-gray-900 p-4 font-heading font-semibold text-lg">
+            <div>Product</div>
+            <div class="col-span-2">Details</div>
+            <div>Price</div>
+            <div>Quantity</div>
+            <div>Total</div>
+          </div>
+          {% for item in cart_items %}
+          
+            <form method="post" action="{% url 'update_cart' item.product.id %}" class="border-t border-gray-300 dark:border-gray-600 p-4 grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
+              {% csrf_token %}
+              <!-- Product Image -->
+              <div>
+                <img src="{{ item.product.image.url|default:'https://images.unsplash.com/photo-1590402494682-cd3fb53b1f94?q=80&w=2070&auto=format&fit=crop' }}"
+                     alt="{{ item.product.name }}"
+                     class="w-16 h-16 object-cover rounded-md">
+              </div>
+              <!-- Product Details -->
+              <div class="col-span-2">
+                <h3 class="text-lg font-semibold font-heading">{{ item.product.name }}</h3>
+                <p class="text-gray-600 dark:text-gray-300 font-body">
+                  Size: {{ item.size|default:'N/A' }}
+                </p>
+                <button type="submit" name="remove" value="true" class="text-accent hover:underline font-body text-sm mt-1">Remove</button>
+              </div>
+              <!-- Price -->
+              <div>
+                <p class="font-body">₦{{ item.product.price|intcomma }}</p>
+              </div>
+              <!-- Quantity -->
+              <div class="flex items-center space-x-2">
+                <button type="button" onclick="decrementQuantity('quantity-{{ item.product.id }}')" class="px-2 py-1 text-gray-600 bg-gray-300 dark:text-gray-300 hover:bg-gray-500 dark:hover:bg-gray-600 rounded">-</button>
+                <input type="number"
+                       id="quantity-{{ item.product.id }}"
+                       name="quantity"
+                       value="{{ item.quantity }}"
+                       min="1"
+                       step="1"
+                       class="w-16 px-3 py-1 border-none bg-transparent font-body text-center focus:outline-none focus:ring-2 focus:ring-accent appearance-none"
+                       style="-webkit-appearance: none; -moz-appearance: textfield;"
+                       required>
+                <button type="button" onclick="incrementQuantity('quantity-{{ item.product.id }}')" class="px-2 py-1 text-gray-600 bg-gray-300 dark:text-gray-300 hover:bg-gray-500 dark:hover:bg-gray-600 rounded">+</button>
+              </div>
+              <!-- Total -->
+              <div>
+                <p class="font-body">₦{{ item.total_price|intcomma }}</p>
+              </div>
+            </form>
+          {% endfor %}
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="flex justify-end">
+          <div class="w-full md:w-1/3 bg-gray-100 dark:bg-gray-900 p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold font-heading mb-4">Order Summary</h3>
+            <div class="flex justify-between font-body mb-2">
+              <span>Subtotal</span>
+              <span>₦{{ cart_subtotal|intcomma }}</span>
+            </div>
+            <div class="flex justify-between font-body mb-4">
+              <span>Estimated Total</span>
+              <span>₦{{ cart_subtotal|intcomma }}</span>
+            </div>
+            {% comment %} {% url 'checkout' %} {% endcomment %}
+            <a href="" class="block w-full bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition text-center">Proceed to Checkout</a>
+          </div>
+        </div>
+      {% else %}
+        <!-- Empty Cart -->
+        <div class="text-center">
+          <p class="text-gray-600 dark:text-gray-300 font-body text-lg mb-4">Your cart is empty.</p>
+          <a href="{% url 'shop' %}" class="bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-2 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition">Shop Now</a>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- JavaScript for Quantity Controls -->
+  <script>
+    function incrementQuantity(inputId) {
+      const input = document.getElementById(inputId);
+      input.value = parseInt(input.value) + 1;
+      input.form.submit(); // Auto-submit on change
+    }
+    function decrementQuantity(inputId) {
+      const input = document.getElementById(inputId);
+      if (parseInt(input.value) > 1) {
+        input.value = parseInt(input.value) - 1;
+        input.form.submit(); // Auto-submit on change
+      }
+    }
+  </script>
+{% endblock %}

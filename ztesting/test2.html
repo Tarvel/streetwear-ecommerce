@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wimer - Streetwear</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#f5f5f5',
+            dark: '#1f2937',
+            accent: '#e63946',
+          },
+          fontFamily: {
+            heading: ['Bebas Neue', 'sans-serif'],
+            body: ['Montserrat', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;600&display=swap">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-body">
+  <!-- Theme Toggle -->
+  <button id="theme-toggle" class="fixed bottom-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+    <i class="fas fa-moon dark:fa-sun"></i>
+  </button>
+
+  <!-- Site Name -->
+  <header class="text-center py-6">
+    <h1 class="text-5xl font-bold font-heading tracking-tight">Wimer</h1>
+  </header>
+
+  <!-- Navbar -->
+  <nav class="bg-white dark:bg-gray-900 bg-opacity-90 dark:bg-opacity-90 shadow sticky top-0 z-10">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <!-- Search Icon -->
+      <div>
+        <a href="/search"><i class="fas fa-search text-xl"></i></a>
+      </div>
+      <!-- Menu Items -->
+      <ul class="flex space-x-8 justify-center flex-1">
+        <li class="relative group">
+          <a href="/shop" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Shop</a>
+          <!-- Dropdown -->
+          <ul class="absolute hidden group-hover:block bg-white dark:bg-gray-900 shadow-lg rounded mt-2">
+            <li><a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 uppercase font-bold font-heading">Categories</a></li>
+          </ul>
+        </li>
+        <li><a href="/gallery" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Gallery</a></li>
+        <li><a href="/info" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Info</a></li>
+        <li><a href="/events" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Events</a></li>
+      </ul>
+      <!-- Right Side Icons -->
+      <div class="flex space-x-4">
+        <a href="/cart"><i class="fas fa-shopping-cart text-xl"></i></a>
+        <a href="/login"><i class="fas fa-sign-in-alt text-xl"></i></a>
+      </div>
+    </div>
+  </nav>
+  <!-- Product Detail Section -->
+  <section class="py-12 container mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Product Images -->
+      <div class="flex flex-col items-center">
+        <img id="main-image" src="https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Graphic Tee" class="w-full max-w-md h-96 object-cover rounded-lg shadow-md mb-4">
+        <!-- Thumbnail Images -->
+        <div class="flex space-x-2">
+          <img src="https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Graphic Tee thumbnail 1" class="w-16 h-16 object-cover rounded-md cursor-pointer hover:opacity-80" onclick="changeImage(this.src)">
+          <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=2070&auto=format&fit=crop" alt="Graphic Tee thumbnail 2" class="w-16 h-16 object-cover rounded-md cursor-pointer hover:opacity-80" onclick="changeImage(this.src)">
+          <img src="https://images.unsplash.com/photo-1562157873-818bc0726f68?q=80&w=627&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Graphic Tee thumbnail 3" class="w-16 h-16 object-cover rounded-md cursor-pointer hover:opacity-80" onclick="changeImage(this.src)">
+        </div>
+      </div>
+      <!-- Product Details -->
+      <div class="flex flex-col justify-center">
+        <h2 class="text-3xl font-bold font-heading mb-4">Graphic Tee</h2>
+        <p class="text-gray-600 dark:text-gray-300 font-body mb-4">Bold streetwear tee with a vibrant graphic print. Perfect for making a statement in the urban jungle.</p>
+        <p class="text-2xl font-semibold font-heading text-accent mb-4">$29.99</p>
+        <!-- Size Selection -->
+        <div class="mb-6">
+          <label class="text-lg font-semibold font-heading mb-2 block">Select Size</label>
+          <div class="flex space-x-4">
+            <label class="flex items-center">
+              <input type="radio" name="size" value="S" class="mr-2" checked>
+              <span class="font-body">S</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="size" value="M" class="mr-2">
+              <span class="font-body">M</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="size" value="L" class="mr-2">
+              <span class="font-body">L</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="size" value="XL" class="mr-2">
+              <span class="font-body">XL</span>
+            </label>
+          </div>
+        </div>
+        <!-- Add to Cart Form -->
+        <form action="/add_to_cart/1" method="post" class="flex flex-col items-start">
+          <input type="hidden" name="size" id="selected-size">
+          <button type="submit" class="bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-2 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition">Add to Cart</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 dark:bg-gray-900 py-6">
+    <div class="container mx-auto px-4 text-center">
+      <!-- Subscribe Form -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-2 font-heading">Join the Wimer Crew</h3>
+        <form action="/subscribe" method="post" class="flex justify-center">
+          <input type="email" name="email" placeholder="Enter your email" class="p-2 rounded-l-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 font-body">
+          <button type="submit" class="p-2 bg-gray-800 dark:bg-gray-600 text-white rounded-r-md font-body">Join Up</button>
+        </form>
+      </div>
+      <!-- Social Media Links -->
+      <div class="flex justify justify-center space-x-4">
+        <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram text-2xl hover:text-accent dark:hover:text-accent"></i></a>
+        <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook text-2xl hover:text-accent dark:hover:text-accent"></i></a>
+        <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter text-2xl hover:text-accent dark:hover:text-accent"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Theme Toggle and Slideshow Script -->
+  <script>
+    // Theme Toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+    });
+
+    // Slideshow
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+
+    function showSlide(index) {
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('opacity-100', i === index);
+        slide.classList.toggle('opacity-0', i !== index);
+      });
+    }
+
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % slides.length;
+      showSlide(currentSlide);
+    }
+
+    // Show the first slide initially
+    showSlide(currentSlide);
+
+    // Auto-advance slides every 5 seconds
+    setInterval(nextSlide, 2000);
+
+    // Update hidden input with selected size
+    const sizeInputs = document.querySelectorAll('input[name="size"]');
+    const selectedSizeInput = document.getElementById('selected-size');
+    sizeInputs.forEach(input => {
+      input.addEventListener('change', () => {
+        selectedSizeInput.value = input.value;
+      });
+    });
+    // Set default size on page load
+    if (sizeInputs.length > 0) {
+      selectedSizeInput.value = sizeInputs[0].value;
+    }
+
+    // Swap main image when thumbnail is clicked
+    function changeImage(src) {
+      document.getElementById('main-image').src = src;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+{% load humanize %}
+{% load static %}
+<section class="antialiased mb-12" aria-labelledby="slideshow-heading">
+  <h2 id="slideshow-heading" class="sr-only">Featured Content Slideshow</h2>
+
+  {% if slideshow_images %}
+  <!-- Main Slideshow Container (Only renders if images exist) -->
+  <div id="slideshow-container" class="relative group w-full mx-auto rounded-lg shadow-xl overflow-hidden" style="max-width: 1600px;">
+
+    <!-- Slides Wrapper -->
+    <div class="relative w-full h-96 md:h-[550px] lg:h-[650px] bg-dark">
+      {% for image in slideshow_images %}
+        <!--
+          Slide Item: Now uses opacity and scale for a super smooth, glitch-free transition.
+        -->
+        <div class="slide absolute inset-0 transition-all duration-1000 ease-in-out
+                    {% if forloop.first %}
+                      opacity-100 scale-100 z-10
+                    {% else %}
+                      opacity-0 scale-95 z-0
+                    {% endif %}">
+
+          <img src="{{ image.url.url }}" alt="{{ image.name }}" class="w-full h-full object-cover">
+
+          <!-- Text Overlay with Gradient -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+
+          <!-- Text container with animation controlled by JS -->
+          <div class="absolute bottom-0 left-0 p-6 md:p-12 text-white">
+            <div class="overflow-hidden">
+                <h3 class="slide-text text-3xl md:text-5xl font-bold font-heading transform transition-transform duration-700 ease-in-out translate-y-full">{{ image.name }}</h3>
+            </div>
+            <div class="overflow-hidden mt-2">
+                <p class="slide-text text-base md:text-lg font-body max-w-xl transform transition-transform duration-700 delay-100 ease-in-out translate-y-full">{{ image.caption }}</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Navigation Controls (Only show if more than one slide) -->
+    <div id="slideshow-controls" class="hidden">
+      <!-- Previous Button -->
+      <button id="prev-slide-btn" aria-label="Previous Slide" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 -translate-x-12 group-hover:translate-x-0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+      </button>
+
+      <!-- Next Button -->
+      <button id="next-slide-btn" aria-label="Next Slide" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 translate-x-12 group-hover:translate-x-0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      </button>
+    </div>
+
+    <!-- Indicator Dots -->
+    <div id="slideshow-indicators" class="absolute bottom-5 left-1/2 -translate-x-1/2 flex space-x-2">
+      <!-- JS will generate dots here -->
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+  <!-- Newest Clothing Section -->
+  <section>
+    <h2 class="text-3xl md:text-4xl font-semibold mb-6 text-center font-heading">Latest Drops</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+      {% for product in newest_products %}
+        <div class="border rounded-lg p-3 md:p-4 shadow-md hover:shadow-lg transition group">
+          <a href="{% url 'product_detail' product.slug %}" class="block">
+            <div class="overflow-hidden rounded-md mb-4">
+              <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+            </div>
+            <h3 class="text-lg md:text-xl font-semibold font-heading truncate">{{ product.name }}</h3>
+            <p class="text-gray-600 dark:text-gray-300 font-body">₦{{ product.price|intcomma }}</p>
+            <small class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ product.stock_quantity }} items left</small>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  
+<script>
+
+  document.addEventListener('DOMContentLoaded', function () {
+      // Only run if the slideshow container exists on the page
+      const container = document.getElementById('slideshow-container');
+      if (!container) return;
+
+      const slides = Array.from(container.querySelectorAll('.slide'));
+      const controls = document.getElementById('slideshow-controls');
+      const nextBtn = document.getElementById('next-slide-btn');
+      const prevBtn = document.getElementById('prev-slide-btn');
+      const indicatorsContainer = document.getElementById('slideshow-indicators');
+      const autoPlayDelay = 3000; // 6 seconds
+
+      let currentIndex = 0;
+      let slideInterval;
+
+      // If there's 0 or 1 slide, we don't need controls, indicators, or auto-play.
+      if (slides.length <= 1) {
+          if (slides.length === 1) {
+              // Animate in the text for the single slide so it's visible
+              animateText(slides[0], true);
+          }
+          indicatorsContainer.remove(); // Remove the dot container completely
+          return; // Stop the script
+      }
+
+      // If we have multiple slides, show the controls.
+      controls.classList.remove('hidden');
+
+      // Create Indicator Dots
+      slides.forEach((_, index) => {
+          const dot = document.createElement('button');
+          dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
+          dot.classList.add('w-2.5', 'h-2.5', 'rounded-full', 'transition-all', 'duration-300', 'hover:bg-white');
+          dot.classList.toggle('bg-white', index === 0);
+          dot.classList.toggle('bg-white/40', index !== 0);
+          dot.addEventListener('click', () => {
+              if (index === currentIndex) return;
+              showSlide(index);
+              resetInterval();
+          });
+          indicatorsContainer.appendChild(dot);
+      });
+      const indicators = Array.from(indicatorsContainer.querySelectorAll('button'));
+
+      function animateText(slide, show) {
+          const textElements = slide.querySelectorAll('.slide-text');
+          textElements.forEach(el => {
+              el.classList.toggle('translate-y-full', !show);
+          });
+      }
+
+      function showSlide(index) {
+          // Find the current and next slides
+          const currentSlide = slides[currentIndex];
+          const nextSlide = slides[index];
+
+          // Animate text out of the current slide
+          animateText(currentSlide, false);
+
+          // --- GLITCH-FREE ANIMATION LOGIC ---
+          // Outgoing slide: Fade out and scale up slightly for a depth effect.
+          currentSlide.classList.remove('opacity-100', 'z-10', 'scale-100');
+          currentSlide.classList.add('opacity-0', 'z-0', 'scale-105');
+
+          // Incoming slide: Fade in and scale from small to normal.
+          nextSlide.classList.remove('opacity-0', 'z-0', 'scale-95');
+          nextSlide.classList.add('opacity-100', 'z-10', 'scale-100');
+
+          // Animate text into the new slide after a short delay to sync with the visual transition
+          setTimeout(() => {
+            animateText(nextSlide, true);
+          }, 350); // Delay should be less than the transition duration
+
+          // Reset the state of the old slide after the transition is over
+          // This prepares it for the next time it needs to be shown.
+          setTimeout(() => {
+            currentSlide.classList.remove('scale-105');
+            currentSlide.classList.add('scale-95');
+          }, 1000); // Must match the CSS transition duration (duration-1000)
+
+          // Update active dot indicator
+          indicators[currentIndex].classList.replace('bg-white', 'bg-white/40');
+          indicators[index].classList.replace('bg-white/40', 'bg-white');
+
+          // Update the current index
+          currentIndex = index;
+      }
+
+      function nextSlide() {
+          const newIndex = (currentIndex + 1) % slides.length;
+          showSlide(newIndex);
+      }
+
+      function prevSlide() {
+          const newIndex = (currentIndex - 1 + slides.length) % slides.length;
+          showSlide(newIndex);
+      }
+
+      function startInterval() {
+          clearInterval(slideInterval); // Clear any existing interval
+          slideInterval = setInterval(nextSlide, autoPlayDelay);
+      }
+
+      function resetInterval() {
+          startInterval();
+      }
+
+      // --- Event Listeners ---
+      nextBtn.addEventListener('click', () => { nextSlide(); resetInterval(); });
+      prevBtn.addEventListener('click', () => { prevSlide(); resetInterval(); });
+      container.addEventListener('mouseenter', () => clearInterval(slideInterval));
+      container.addEventListener('mouseleave', startInterval);
+      document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+              clearInterval(slideInterval);
+          } else {
+              startInterval();
+          }
+      });
+
+      // --- Initialize ---
+      animateText(slides[0], true); // Animate text on the first slide when the page loads
+      startInterval();
+  });
+</script>
+{% endblock %}

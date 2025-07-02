@@ -1,0 +1,57 @@
+  {% extends "admin/base.html" %}
+  {% load static %}
+
+  {% block title %}{{ title }} | Wimer Admin{% endblock %}
+
+  {% block extrastyle %}
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#f5f5f5',
+              dark: '#1f2937',
+              accent: '#e63946',
+            },
+            fontFamily: {
+              heading: ['Bebas Neue', 'sans-serif'],
+              body: ['Montserrat', 'sans-serif'],
+            },
+          },
+        },
+      }
+    </script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;600&display=swap">
+    <style>
+      body {
+        font-family: 'Montserrat', sans-serif;
+      }
+      #header {
+        background-color: #1f2937;
+        color: white;
+        font-family: 'Bebas Neue', sans-serif;
+      }
+      #branding h1 {
+        font-size: 2rem;
+        letter-spacing: 1px;
+      }
+      .module h2, .module caption, .inline-group h2 {
+        font-family: 'Bebas Neue', sans-serif;
+        color: #e63946;
+      }
+      .button, input[type=submit], input[type=button], .submit-row input {
+        background-color: #1f2937;
+        color: white;
+        border-radius: 0.375rem;
+        padding: 0.5rem 1rem;
+      }
+      .button:hover, input[type=submit]:hover, input[type=button]:hover {
+        background-color: #e63946;
+      }
+    </style>
+  {% endblock %}
+
+  {% block branding %}
+    <h1 id="site-name">Wimer Admin Panel</h1>
+  {% endblock %}

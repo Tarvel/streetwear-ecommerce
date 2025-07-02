@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Shop{% endblock %}
+{% block content %}
+{% load humanize %}
+  <!-- Shop Section -->
+  <section class="py-12">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold font-heading mb-4">Shop Wimer</h2>
+      <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
+        Discover our latest streetwear drops and find your perfect style.
+      </p>
+    </div>
+
+    <div class="mb-2">
+      {% if drops %}
+      <nav class="bg-white dark:bg-gray-900 bg-opacity-90 dark:bg-opacity-90">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+          <!-- Menu Items -->
+          <ul class="flex space-x-20 justify-center flex-1">
+            <li><a href="{% url 'shop' %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent {% if request.path == '/shops/' %}underline text-accent{% endif %}">All</a></li>
+            {% for drop in drops %}
+            <li><a href="{% url 'shop_drop' drop %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent {% if page|lower == drop|lower %} underline text-accent{% endif %}">{{ drop }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </nav>   
+      {% endif %}
+    </div>
+
+   <!-- Sort Section -->
+    <div class="mb-8">
+      <form method="get" action="" class="flex justify-start items-center gap-4" id="sort-form">
+        <!-- Sort Dropdown -->
+        <div class="relative inline-block">
+          <label for="sort" class="font-semibold font-heading mr-2">Sort By</label>
+          <select name="sort" id="sort" onchange="document.getElementById('sort-form').submit()"
+            class="appearance-none p-2 pr-8 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 bg-white text-gray-800 dark:text-white rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent">
+            
+            <option value="">All Products</option>
+
+            <optgroup label="Sort by Time">
+              <option value="newest" {% if request.GET.sort == "newest" %}selected{% endif %}>Newest First</option>
+              <option value="oldest" {% if request.GET.sort == "oldest" %}selected{% endif %}>Oldest First</option>
+            </optgroup>
+
+            <optgroup label="Sort by Price">
+              <option value="low-high" {% if request.GET.sort == "low-high" %}selected{% endif %}>Low to High</option>
+              <option value="high-low" {% if request.GET.sort == "high-low" %}selected{% endif %}>High to Low</option>
+            </optgroup>
+
+            <optgroup label="Availability">
+              <option value="in-stock" {% if request.GET.sort == "in-stock" %}selected{% endif %}>In Stock</option>
+              <option value="out-of-stock" {% if request.GET.sort == "out-of-stock" %}selected{% endif %}>Out of Stock</option>
+            </optgroup>
+          </select>
+
+          <!-- Custom Arrow -->
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </div>
+      </form>
+    </div>
+
+
+    <!-- Product Grid -->
+    <section>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          {% for product in products %}
+            <div class="border rounded-lg p-3 md:p-4 shadow-md hover:shadow-lg transition group">
+              <a href="{% url 'product_detail' product.slug %}" class="block">
+                <div class="overflow-hidden rounded-md mb-4">
+                  <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+                </div>
+                <h3 class="text-lg md:text-xl font-semibold font-heading truncate">{{ product.name }}</h3>
+                <p class="text-gray-600 dark:text-gray-300 font-body">₦{{ product.price|intcomma }}</p>
+                <small class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ product.stock_quantity }} items left</small>
+              </a>
+            </div>
+          {% empty %}
+            <p class="text-gray-600 dark:text-gray-300 font-body text-center col-span-full">No products found.</p>
+          {% endfor %}
+        </div>
+      </section>
+
+
+    <!-- Pagination -->
+    {% if products.has_other_pages %}
+      <div class="mt-8 flex justify-center space-x-2">
+        {% if products.has_previous %}
+          <a href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md hover:bg-accent dark:hover:bg-accent hover:text-white">Previous</a>
+        {% endif %}
+        {% for num in products.paginator.page_range %}
+          <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 {% if products.number == num %}bg-accent text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white{% endif %} rounded-md hover:bg-accent dark:hover:bg-accent hover:text-white">{{ num }}</a>
+        {% endfor %}
+        {% if products.has_next %}
+          <a href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md hover:bg-accent dark:hover:bg-accent hover:text-white">Next</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
