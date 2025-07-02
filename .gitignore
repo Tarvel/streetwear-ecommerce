@@ -1,6 +1,6 @@
-./excesses.md
-./media
-./ztesting
+excesses.md
+media/
+ztesting
 db.sqlite3
 venv
 ./*.pyc
