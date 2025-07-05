@@ -4,22 +4,29 @@
 {% load humanize %}
   <!-- Product Detail Section -->
   <section class="py-12">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
       <!-- Product Images -->
       <div class="flex flex-col items-center">
         <!-- Main image -->
-        <img id="main-image"
-             src="{% if product.image %}{{ product.image.url }}{% else %}https://images.unsplash.com/photo-1590402494682-cd3fb53b1f94?q=80&w=2070&auto=format&fit=crop{% endif %}"
-             alt="{{ product.name }}"
-             class="w-full max-w-md h-96 object-cover rounded-lg shadow-md mb-4">
+        <div class="w-full max-w-md rounded-lg shadow-xl overflow-hidden mb-4">
+          <img id="main-image"
+               src="{% if product.image %}{{ product.image.url }}{% endif %}"
+               alt="{{ product.name }}"
+               class="w-full h-auto object-cover aspect-square">
+        </div>
         <!-- Thumbnail Images -->
-        {% if additional_images %}
-          <div class="flex space-x-2">
-            {% for img in additional_images %}
+        {% if product.additional_images.all %}
+          <div class="flex space-x-3">
+            <!-- Always include the main product image as the first thumbnail -->
+            <img src="{{ product.image.url }}"
+                 alt="{{ product.name }} main thumbnail"
+                 class="w-16 h-16 object-cover rounded-md cursor-pointer hover:opacity-50 ring-1 ring-black"
+                 onclick="document.getElementById('main-image').src = this.src; setActiveThumbnail(this);">
+            {% for img in product.additional_images.all %}
               <img src="{{ img.image.url }}"
                    alt="{{ product.name }} thumbnail"
-                   class="w-16 h-16 object-cover rounded-md cursor-pointer hover:opacity-80 outline"
-                   onclick="document.getElementById('main-image').src = this.src">
+                   class="w-16 h-16 object-cover rounded-md cursor-pointer hover:opacity-50 ring-1 ring-black"
+                   onclick="document.getElementById('main-image').src = this.src; setActiveThumbnail(this);">
             {% endfor %}
           </div>
         {% endif %}
@@ -29,78 +36,69 @@
       <div class="flex flex-col justify-center">
         <h2 class="text-3xl font-bold font-heading mb-4">{{ product.name }}</h2>
         <p class="text-gray-600 dark:text-gray-300 font-body mb-4">{{ product.description|default:"No description available." }}</p>
-        <p class="text-2xl font-semibold font-heading text-accent mb-4">₦{{ product.price|intcomma }}</p>
-        <p class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ product.stock_quantity }} items left</p>
-        <!-- Add to Cart Form -->
-        <form action="{% url 'add_to_cart' product.id %}" method="post" class="flex flex-col items-start">
-          {% csrf_token %}
-          <!-- Size Selection -->
-          <div class="mb-6">
-            <label class="text-lg font-semibold font-heading mb-2 block">Select Size</label>
-            <div class="flex space-x-4 mb-4">
-              {% for size in product.sizes %}
-                <label class="flex items-center">
-                  <input type="radio" name="size" value="{{ size }}" class="mr-2" {% if forloop.first %}checked{% endif %}>
-                  <span class="font-body">{{ size }}</span>
-                </label>
-              {% empty %}
-                <p class="text-gray-600 dark:text-gray-300 font-body">No sizes available.</p>
+        <p class="text-2xl font-semibold font-heading text-accent mb-4">₦{{ selected_variant.price|intcomma|default:product.base_price|intcomma }}</p>
+        <!-- Select variant -->
+        <form method="get" class="space-y-6 mb-6" id="variant-form">
+          <div>
+            <label for="variant" class="text-lg font-semibold font-heading mb-2 block">Select Option</label>
+            <select id="variant" name="variant" onchange="this.form.submit()" class="appearance-none p-2 pr-8 border rounded-md ...">
+              {% for variant in variants %}
+                <!-- Cleaner check for the selected option -->
+                <option value="{{ variant.id }}" {% if selected_variant.id == variant.id %}selected{% endif %}>
+                  {{ variant.size }}{% if variant.colour %} - {{ variant.colour|title }}{% endif %} ({{ variant.stock_quantity }} left)
+                </option>
               {% endfor %}
-            </div>
+            </select>
+          </div>
+        </form>
+
+        {% if cart.quantity > 0 %}
+          <form action="{% url 'update_cart' selected_variant.id %}" method="post" class="space-y-6">
+            {% csrf_token %}
             <!-- Quantity Input -->
-            <div class="flex items-center space-x-2">
-              <label for="quantity-{{ product.id }}" class="font-body text-gray-600 dark:text-gray-300">Qty:</label>
-              <div class="flex items-center border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 shadow-sm">
-                <button type="button" onclick="decrementQuantity('quantity-{{ product.id }}')" class="px-3 py-2 text-gray-600 bg-gray-300 dark:text-gray-300 hover:bg-gray-500 dark:hover:bg-gray-600 rounded-l-md">-</button>
+            <div>
+              <label for="quantity-input" class="text-lg font-semibold font-heading mb-2 block">Quantity</label>
+              <div class="flex items-center border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 shadow-sm" style="max-width: 150px;">
+                <button type="button" onclick="decrementQuantity('quantity-input')" class="w-1/3 px-3 py-3 text-gray-600 dark:text-gray-300 bg-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600 rounded-l-md text-lg">-</button>
                 <input type="number"
-                       id="quantity-{{ product.id }}"
+                       id="quantity-input"
+                       name="quantity"
+                       value="{{ cart.quantity }}"
+                       min="1"
+                       max="{{ selected_variant.stock_quantity }}"
+                       class="w-1/3 border-none bg-transparent font-body text-center focus:outline-none text-lg font-semibold"
+                       style="-webkit-appearance: none; -moz-appearance: textfield;"
+                       required>
+                <button type="button" onclick="incrementQuantity('quantity-input')" class="w-1/3 px-3 py-3 text-gray-600 dark:text-gray-300 bg-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600 rounded-r-md text-lg">+</button>
+              </div>
+            </div>
+            <button type="submit" class="w-full md:w-auto bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-8 rounded-md hover:bg-accent dark:hover:bg-accent transition">Update Cart</button>
+          </form>
+        {% else %}
+          <!-- Add to Cart Form (shown when product is not in cart) -->
+          <form action="{% url 'add_to_cart' selected_variant.id %}" method="post" class="space-y-6">
+            {% csrf_token %}
+            <!-- Quantity Input -->
+            <div>
+              <label for="quantity-input" class="text-lg font-semibold font-heading mb-2 block">Quantity</label>
+              <div class="flex items-center border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 shadow-sm" style="max-width: 150px;">
+                <button type="button" onclick="decrementQuantity('quantity-input')" class="w-1/3 px-3 py-3 text-gray-600 dark:text-gray-300 bg-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600 rounded-l-md text-lg">-</button>
+                <input type="number"
+                       id="quantity-input"
                        name="quantity"
                        value="1"
                        min="1"
-                       step="1"
-                       class="w-16 px-3 py-1 border-none bg-transparent font-body text-center focus:outline-none focus:ring-2 focus:ring-accent appearance-none"
+                       max="{{ selected_variant.stock_quantity }}"
+                       class="w-1/3 border-none bg-transparent font-body text-center focus:outline-none text-lg font-semibold"
                        style="-webkit-appearance: none; -moz-appearance: textfield;"
                        required>
-                <button type="button" onclick="incrementQuantity('quantity-{{ product.id }}')" class="px-3 py-2 text-gray-600 dark:text-gray-300 bg-gray-300 hover:bg-gray-500 dark:hover:bg-gray-600 rounded-r-md">+</button>
+                <button type="button" onclick="incrementQuantity('quantity-input')" class="w-1/3 px-3 py-3 text-gray-600 dark:text-gray-300 bg-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600 rounded-r-md text-lg">+</button>
               </div>
-              <!-- Cart Quantity Message -->
-              {% if cart_quantity %}
-                <p class="text-sm font-body text-gray-600 dark:text-gray-300 mt-2">You have {{ cart_quantity }} of this in cart</p>
-              {% endif %}
             </div>
-          </div>
-          <input type="hidden" name="size" id="selected-size">
-          <button type="submit" class="bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-2 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition">Add to Cart</button>
-        </form>
+            <button type="submit" class="w-full md:w-auto bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-8 rounded-md hover:bg-accent dark:hover:bg-accent transition">Add to Cart</button>
+          </form>
+        {% endif %}
       </div>
     </div>
   </section>
-
-  <!-- JavaScript for Size Selection and Quantity Controls -->
-  <script>
-    // Update hidden input with selected size
-    const sizeInputs = document.querySelectorAll('input[name="size"]');
-    const selectedSizeInput = document.getElementById('selected-size');
-    sizeInputs.forEach(input => {
-      input.addEventListener('change', () => {
-        selectedSizeInput.value = input.value;
-      });
-    });
-    // Set default size on page load
-    if (sizeInputs.length > 0) {
-      selectedSizeInput.value = sizeInputs[0].value;
-    }
-
-    // Quantity increment/decrement functions
-    function incrementQuantity(inputId) {
-      const input = document.getElementById(inputId);
-      input.value = parseInt(input.value) + 1;
-    }
-    function decrementQuantity(inputId) {
-      const input = document.getElementById(inputId);
-      if (parseInt(input.value) > 1) {
-        input.value = parseInt(input.value) - 1;
-      }
-    }
-  </script>
 {% endblock %}

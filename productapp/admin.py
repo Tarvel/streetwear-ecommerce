@@ -7,6 +7,7 @@ from .models import (
     GalleryImage,
     ContactSubmission,
     ProductImage,
+    ProductVariant,
     CartItem,
 )
 
@@ -17,43 +18,26 @@ class ProductImageInline(admin.TabularInline):
     fields = ["image"]
 
 
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 1
+    fields = ["size", "color", "price", "stock_quantity", "sku", "image"]
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     form = ProductAdminForm
-    list_display = (
-        "name",
-        "price",
-        "availability",
-        "stock_quantity",
-        "drop",
-        "created_at",
-    )
-    list_filter = ("availability", "drop", "created_at")
-    search_fields = ("name", "description")
-    list_editable = ("price", "availability", "stock_quantity")
-    inlines = [ProductImageInline]
+    list_display = ("name", "drop", "is_available", "created_at",)
+    list_filter = ("drop", "created_at")
+    search_fields = ("name", "description", "base_price")
+    inlines = [ProductImageInline, ProductVariantInline]
     fieldsets = (
-        (
-            None,
-            {
-                "fields": (
-                    "name",
-                    "slug",
-                    "description",
-                    "price",
-                    "image",
-                    "availability",
-                    "stock_quantity",
-                    "sizes",
-                )
-            },
-        ),
+        (None, {"fields": ("name", "slug", "base_price", "description", "is_available", "image")}),
         ("Details", {"fields": ("drop",)}),
     )
     prepopulated_fields = {"slug": ("name",)}
 
 
-# Customize Drop admin
 @admin.register(Drop)
 class DropAdmin(admin.ModelAdmin):
     list_display = ("name", "created_at")
@@ -61,7 +45,6 @@ class DropAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 
-# Customize Event admin
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ("name", "date", "location", "created_at")
@@ -73,36 +56,25 @@ class EventAdmin(admin.ModelAdmin):
     )
 
 
-# Customize GalleryImage admin
 @admin.register(GalleryImage)
 class GalleryImageAdmin(admin.ModelAdmin):
     list_display = ("name", "caption", "url", "created_at")
-    search_fields = ("name",)
+    search_fields = ("name", "caption")
     list_filter = ("created_at",)
     fields = ("url", "name", "caption")
 
 
-# Customize ContactSubmission admin
 @admin.register(ContactSubmission)
 class ContactSubmissionAdmin(admin.ModelAdmin):
     list_display = ("name", "email", "submitted_at")
     search_fields = ("name", "email", "message")
     list_filter = ("submitted_at",)
-    readonly_fields = (
-        "name",
-        "email",
-        "message",
-        "submitted_at",
-    )
+    readonly_fields = ("name", "email", "message", "submitted_at")
 
 
-# Customize GalleryImage admin
 @admin.register(CartItem)
 class CartItemsAdmin(admin.ModelAdmin):
-    list_display = ("user", "product", "quantity", "size", "added_at")
-    search_fields = (
-        "product",
-        "user",
-    )
+    list_display = ("user", "variant", "quantity", "added_at")
+    search_fields = ("variant__name", "user__first_name", "user__last_name")
     list_filter = ("added_at",)
-    fields = ("user", "product", "quantity", "size")
+    fields = ("user", "variant", "quantity")

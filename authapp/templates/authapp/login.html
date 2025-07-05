@@ -11,7 +11,7 @@
     </div>
     <div class="max-w-md mx-auto">
       <!-- Login Form -->
-      <form method="post" action="{% url 'login' %}" class="space-y-6">
+      <form method="post" action="{% url 'login' %}?next={{ request.GET.next }}" class="space-y-6">
         {% csrf_token %}
         <!-- Form Errors -->
         {% if form.errors %}
@@ -36,6 +36,7 @@
           <label for="id_password" class="block text-lg font-semibold font-heading mb-2">Password</label>
           <input type="password" id="id_password" name="password" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your password">
         </div>
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
         <!-- Submit Button -->
         <button type="submit" class="w-full bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition">Login</button>
       </form>

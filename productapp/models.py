@@ -2,7 +2,8 @@ from django.db import models
 from django.utils import timezone
 from authapp.models import User
 from django.utils.text import slugify
-import uuid
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 
 
 class Drop(models.Model):
@@ -17,36 +18,58 @@ class Drop(models.Model):
 
 
 class Product(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
+    description = models.TextField(blank=True)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    image = models.ImageField(upload_to="products/", blank=True)
+    drop = models.ForeignKey("Drop", on_delete=models.SET_NULL, null=True, blank=True)
+    is_available = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class ProductVariant(models.Model):
     SIZE_CHOICES = [
         ("S", "Small"),
         ("M", "Medium"),
         ("L", "Large"),
         ("XL", "Extra Large"),
     ]
-    name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True, blank=True)
-    description = models.TextField(blank=True)
+
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="variants"
+    )
+    size = models.CharField(max_length=2, choices=SIZE_CHOICES)
+    colour = models.CharField(max_length=30, blank=True)  # optional
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to="products/", blank=True)
-    drop = models.ForeignKey("Drop", on_delete=models.SET_NULL, null=True, blank=True)
-    sizes = models.JSONField(default=list, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
     stock_quantity = models.PositiveIntegerField(default=0)
+    sku = models.CharField(max_length=100, unique=True)
     availability = models.BooleanField(default=True)
+    image = models.ImageField(upload_to="product_variants/", blank=True)
+
+    def update_is_available(self):
+        total_stock = sum(
+            qty_sum.stock_quantity for qty_sum in self.product.variants.all()
+        )
+        self.product.is_available = total_stock > 0
+        self.product.save()
 
     def __str__(self):
-        return self.name
+        return f"{self.product.name} - {self.size}{f' - {self.color}' if self.color else ''}"
 
-    class Meta:
-        ordering = ["-created_at"]
 
-    def save(self, *args, **kwargs):
-        self.availability = self.stock_quantity > 0
-        if not self.slug:
-            base_slug_name = slugify(self.name)
-            unique_slug_id = uuid.uuid4().hex[:6]
-            self.slug = f"{base_slug_name}-{unique_slug_id}"
-        super().save(*args, **kwargs)
+@receiver(post_save, sender=ProductVariant)
+@receiver(post_delete, sender=ProductVariant)
+def update_product_availability(sender, instance, **kwargs):
+    instance.update_is_available()
 
 
 class ProductImage(models.Model):
@@ -106,31 +129,13 @@ class ContactSubmission(models.Model):
 
 class CartItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
-    size = models.CharField(max_length=200, blank=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     added_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.first_name} added {self.product} to cart"
-
-    def save(self, *args, **kwargs):
-        self.total_price = int(self.product.price) * self.quantity
-
-        existing_item = (
-            CartItem.objects.exclude(pk=self.pk)
-            .filter(product=self.product, size=self.size)
-            .first()
-        )
-        if existing_item:
-            existing_item.quantity = int(existing_item.quantity)
-            existing_item.quantity += self.quantity
-            existing_item.total_price = int(existing_item.product.price) * existing_item.quantity
-            existing_item.save()
-            return
-
-        super().save(*args, **kwargs)
+        return f"{self.user.first_name} added {self.variant} to cart"
 
     class Meta:
         ordering = ["-added_at"]

@@ -34,9 +34,9 @@
         <div class="relative inline-block">
           <label for="sort" class="font-semibold font-heading mr-2">Sort By</label>
           <select name="sort" id="sort" onchange="document.getElementById('sort-form').submit()"
-            class="appearance-none p-2 pr-8 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 bg-white text-gray-800 dark:text-white rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent">
+            class="appearance-none p-2 pr-8 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 bg-white text-gray-800 dark:text-white rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent font-body">
             
-            <option value="">All Products</option>
+            <option value=" ">All Products</option>
 
             <optgroup label="Sort by Time">
               <option value="newest" {% if request.GET.sort == "newest" %}selected{% endif %}>Newest First</option>
@@ -46,11 +46,6 @@
             <optgroup label="Sort by Price">
               <option value="low-high" {% if request.GET.sort == "low-high" %}selected{% endif %}>Low to High</option>
               <option value="high-low" {% if request.GET.sort == "high-low" %}selected{% endif %}>High to Low</option>
-            </optgroup>
-
-            <optgroup label="Availability">
-              <option value="in-stock" {% if request.GET.sort == "in-stock" %}selected{% endif %}>In Stock</option>
-              <option value="out-of-stock" {% if request.GET.sort == "out-of-stock" %}selected{% endif %}>Out of Stock</option>
             </optgroup>
           </select>
 
@@ -73,7 +68,7 @@
                   <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
                 </div>
                 <h3 class="text-lg md:text-xl font-semibold font-heading truncate">{{ product.name }}</h3>
-                <p class="text-gray-600 dark:text-gray-300 font-body">₦{{ product.price|intcomma }}</p>
+                <p class="text-gray-600 dark:text-gray-300 font-body">₦{{ product.base_price|intcomma }}</p>
                 <small class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ product.stock_quantity }} items left</small>
               </a>
             </div>
