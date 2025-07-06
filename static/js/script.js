@@ -1,4 +1,4 @@
-// Quantity Increment/Decrement Functions
+// Quantity Increment/Decrement for Product Detail Page
 function incrementQuantity(inputId) {
   const input = document.getElementById(inputId);
   const max = parseInt(input.max);
@@ -15,6 +15,24 @@ function decrementQuantity(inputId) {
   if (currentValue > min) {
     input.value = currentValue - 1;
   }
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast-message");
+  toast.innerText = message;
+  toast.classList.remove("hidden");
+
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 3000);
+}
+
+// Thumbnail Selection for Product Detail Page
+function setActiveThumbnail(thumbnail) {
+  const thumbnails = document.querySelectorAll('.cursor-pointer');
+  thumbnails.forEach(img => img.classList.remove('ring-2', 'ring-accent', 'opacity-100'));
+  thumbnail.classList.add('ring-2', 'ring-accent', 'opacity-100');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,19 +53,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Theme Toggle
   const themeToggle = document.getElementById('theme-toggle');
   const themeIcon = document.getElementById('theme-icon');
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token }}';
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
   themeToggle.addEventListener('click', () => {
+    // Toggle theme
     document.documentElement.classList.toggle('dark');
+
+    // Toggle icon
     themeIcon.classList.toggle('fa-moon');
     themeIcon.classList.toggle('fa-sun');
-    fetch('', {
+
+    // Send theme to server
+    fetch('/set-theme/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken,
+        'X-CSRFToken': csrfToken
       },
-      body: JSON.stringify({ theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' }),
+      body: JSON.stringify({
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+      }),
     });
   });
 
@@ -106,25 +131,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextBtn = document.getElementById('next-slide-btn');
     const prevBtn = document.getElementById('prev-slide-btn');
     const indicatorsContainer = document.getElementById('slideshow-indicators');
-    const autoPlayDelay = 3000; // 3 seconds
+    const autoPlayDelay = 3000;
 
     let currentIndex = 0;
     let slideInterval;
 
-    // If there's 0 or 1 slide, we don't need controls, indicators, or auto-play.
     if (slides.length <= 1) {
       if (slides.length === 1) {
-        // Animate in the text for the single slide
         animateText(slides[0], true);
       }
-      indicatorsContainer.remove(); // Remove the dot container
+      indicatorsContainer.remove();
       return;
     }
 
-    // Show controls for multiple slides
     controls.classList.remove('hidden');
 
-    // Create Indicator Dots
     slides.forEach((_, index) => {
       const dot = document.createElement('button');
       dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
@@ -151,16 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const currentSlide = slides[currentIndex];
       const nextSlide = slides[index];
 
-      // Animate text out of the current slide
       animateText(currentSlide, false);
 
-      // Glitch-free animation
       currentSlide.classList.remove('opacity-100', 'z-10', 'scale-100');
       currentSlide.classList.add('opacity-0', 'z-0', 'scale-105');
       nextSlide.classList.remove('opacity-0', 'z-0', 'scale-95');
       nextSlide.classList.add('opacity-100', 'z-10', 'scale-100');
 
-      // Animate text into the new slide
       setTimeout(() => {
         animateText(nextSlide, true);
       }, 350);
@@ -169,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentSlide.classList.add('scale-95');
       }, 1000);
 
-      // Update active dot indicator
       indicators[currentIndex].classList.replace('bg-white', 'bg-white/40');
       indicators[index].classList.replace('bg-white/40', 'bg-white');
 
@@ -195,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
       startInterval();
     }
 
-    // Event Listeners
     nextBtn.addEventListener('click', () => { nextSlide(); resetInterval(); });
     prevBtn.addEventListener('click', () => { prevSlide(); resetInterval(); });
     container.addEventListener('mouseenter', () => clearInterval(slideInterval));
@@ -208,8 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Initialize
     animateText(slides[0], true);
     startInterval();
   }
 });
+

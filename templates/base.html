@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Wimer - {% block title %}Streetwear{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -32,13 +33,13 @@
 <body class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-body flex flex-col min-h-screen">
   <!-- Theme Toggle -->
   <button id="theme-toggle" class="fixed bottom-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 z-50">
-    <i id="theme-icon" class="fas fa-moon"></i>
+    <i id="theme-icon"class="fas fa-moon dark:fa-sun"></i>
   </button>
 
   <!-- Site Name -->
   <header class="text-center py-1">
     <a href="{% url 'home' %}">
-      <img src="{% static 'images/wimer_logo.png' %}" alt="Wimer Logo" class="mx-auto w-48 h-48">
+      <img src="{% static 'images/wimer_logo.png' %}" alt="Wimer Logo" class="mx-auto w-48 h-48 dark:invert dark:brightness-0">
     </a>
   </header>
 
@@ -95,7 +96,7 @@
           <ul class="absolute hidden group-hover:block bg-white dark:bg-gray-900 shadow-lg rounded overflow-hidden right-0 w-40">
             {% if user.is_authenticated %}
               <li class="border-b border-gray-200 dark:border-gray-700">
-                <a href="" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Settings</a>
+                <a href="{% url 'update_detail' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Settings</a>
               </li>
               <li class="border-b border-gray-200 dark:border-gray-700">
                 <a href="" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">History</a>
@@ -133,7 +134,7 @@
       <h3 class="font-heading text-xl font-bold mb-4 uppercase">Account</h3>
       <ul class="space-y-4 font-body">
         {% if user.is_authenticated %}
-          <li><a href="" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-cog fa-fw w-5"></i><span>Settings</span></a></li>
+          <li><a href="{% url 'update_detail' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-cog fa-fw w-5"></i><span>Settings</span></a></li>
           <li><a href="" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-history fa-fw w-5"></i><span>History</span></a></li>
           <li><a href="{% url 'logout' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-sign-out-alt fa-fw w-5"></i><span>Logout</span></a></li>
         {% else %}

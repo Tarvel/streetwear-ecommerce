@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Cart{% endblock %}
+{% block content %}
+{% load humanize %}
+<div id="toast-message" class="fixed bottom-6 right-6 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg hidden z-50"></div>
+<!-- Cart Section -->
+<section class="py-12">
+  <div class="text-center mb-12">
+    <h2 class="text-3xl md:text-4xl font-bold font-heading mb-4">Your Cart</h2>
+    <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
+      Review your selected items and proceed to checkout.
+    </p>
+  </div>
+
+  <div class="max-w-4xl mx-auto">
+    <div id="cart-items-wrapper">
+      {% include 'cart/_cart_items.html' %}
+    </div>
+
+  </div>
+</section>
+<script>
+// AJAX cart quantity update on button click or input change
+function updateCartAjax(form) {
+  const targetSelector = form.dataset.target;
+  const formData = new FormData(form);
+
+  fetch(form.action, {
+  method: form.method,
+  headers: {
+    "X-Requested-With": "XMLHttpRequest",
+    "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
+  },
+  body: formData
+})
+.then(res => res.json())
+.then(data => {
+  if (data.html) {
+    document.querySelector(targetSelector).innerHTML = data.html;
+  }
+
+  if (data.message) {
+    showToast(data.message);
+  }
+})
+.catch(error => console.error("Cart update failed", error));
+}
+
+function incrementCartQuantity(inputId) {
+  const input = document.getElementById(inputId);
+  const max = parseInt(input.max, 10);
+  let currentValue = parseInt(input.value, 10);
+  if (currentValue < max) {
+    input.value = currentValue + 1;
+    updateCartAjax(input.form);  
+  }
+}
+
+function decrementCartQuantity(inputId) {
+  const input = document.getElementById(inputId);
+  let currentValue = parseInt(input.value, 10);
+  if (currentValue > 1) {
+    input.value = currentValue - 1;
+    updateCartAjax(input.form);  
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".ajax-cart-form").forEach(form => {
+    const input = form.querySelector(".quantity-input");
+
+    // If user manually changes quantity input
+    input.addEventListener("change", function () {
+      updateCartAjax(form);
+    });
+  });
+});
+
+
+</script>
+
+
+
+
+{% endblock %}

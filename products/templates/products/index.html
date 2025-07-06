@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+{% load humanize %}
+{% load static %}
+<section class="antialiased mb-12" aria-labelledby="slideshow-heading">
+  <h2 id="slideshow-heading" class="sr-only">Featured Content Slideshow</h2>
+
+  {% if slideshow_images %}
+  <!-- Main Slideshow Container (Only renders if images exist) -->
+  <div id="slideshow-container" class="relative group w-full mx-auto rounded-lg shadow-xl overflow-hidden" style="max-width: 1600px;">
+    <!-- Slides Wrapper -->
+    <div class="relative w-full h-96 md:h-[550px] lg:h-[650px] bg-dark">
+      {% for image in slideshow_images %}
+        <!-- Slide Item: Now uses opacity and scale for a super smooth, glitch-free transition. -->
+        <div class="slide absolute inset-0 transition-all duration-1000 ease-in-out
+                    {% if forloop.first %}
+                      opacity-100 scale-100 z-10
+                    {% else %}
+                      opacity-0 scale-95 z-0
+                    {% endif %}">
+          <img src="{{ image.image.url }}" alt="{{ image.name }}" class="w-full h-full object-cover">
+          <!-- Text Overlay with Gradient -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+          <!-- Text container with animation controlled by JS -->
+          <div class="absolute bottom-0 left-0 p-6 md:p-12 text-white">
+            <div class="overflow-hidden">
+              <h3 class="slide-text text-3xl md:text-5xl font-bold font-heading transform transition-transform duration-700 ease-in-out translate-y-full">{{ image.name }}</h3>
+            </div>
+            <div class="overflow-hidden mt-2">
+              <p class="slide-text text-base md:text-lg font-body max-w-xl transform transition-transform duration-700 delay-100 ease-in-out translate-y-full">{{ image.description }}</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <!-- Navigation Controls (Only show if more than one slide) -->
+    <div id="slideshow-controls" class="hidden">
+      <!-- Previous Button -->
+      <button id="prev-slide-btn" aria-label="Previous Slide" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 -translate-x-12 group-hover:translate-x-0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+      </button>
+      <!-- Next Button -->
+      <button id="next-slide-btn" aria-label="Next Slide" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 translate-x-12 group-hover:translate-x-0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      </button>
+    </div>
+    <!-- Indicator Dots -->
+    <div id="slideshow-indicators" class="absolute bottom-5 left-1/2 -translate-x-1/2 flex space-x-2">
+      <!-- JS will generate dots here -->
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<section>
+  <h2 class="text-3xl md:text-4xl font-semibold mb-6 text-center font-heading">Newest Drops</h2>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
+    {% for product in newest_products %}
+      <div class="border rounded-lg p-3 md:p-4 shadow-md hover:shadow-lg transition group">
+        <a href="{% url 'product_detail' product.slug %}" class="block">
+          <div class="overflow-hidden rounded-md mb-4">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
+          </div>
+          <h3 class="text-lg md:text-xl font-semibold font-heading truncate">{{ product.name }}</h3>
+          <b class="text-gray-600 dark:text-gray-300 font-body">₦{{ product.base_price|intcomma }}</b>
+          {% comment %} <small class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ product.stock_quantity }} items left</small> {% endcomment %}
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

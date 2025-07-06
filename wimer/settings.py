@@ -22,8 +22,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
-    "productapp",
-    "authapp",
+    "products",
+    "accounts",
+    "cart",
+    "contact",
+    "events",
+    "gallery",
 ]
 
 MIDDLEWARE = [
@@ -47,8 +51,8 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                "productapp.context_processors.drop_context",
-                "productapp.context_processors.cart_context",
+                "products.context_processors.drop_context",
+                "products.context_processors.cart_context",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -97,6 +101,8 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY')
 
 
 MEDIA_URL = "/media/"

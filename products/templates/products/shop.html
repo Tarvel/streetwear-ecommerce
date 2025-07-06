@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}Shop{% endblock %}
+{% block content %}
+{% load humanize %}
+  <!-- Shop Section -->
+<section class="py-12">
+  <div class="text-center mb-12">
+    <h2 class="text-4xl font-bold font-heading mb-4">Shop Wimer</h2>
+    <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
+      Discover our latest streetwear drops and find your perfect style.
+    </p>
+  </div>
+
+  <!-- Responsive Category Navigation & Sorting -->
+  <div class="container mx-auto px-4">
+    {% if drops %}
+    <nav class="mb-8">
+      <!-- Desktop Menu (Visible on medium screens and up) -->
+      <ul class="hidden md:flex space-x-8 lg:space-x-20 justify-center flex-1">
+        <li><a href="{% url 'shop' %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent {% if request.path == '/shops/' %}underline text-accent{% endif %}">All</a></li>
+        {% for drop in drops %}
+        <li><a href="{% url 'shop_drop' drop %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent {% if page|lower == drop|lower %}underline text-accent{% endif %}">{{ drop }}</a></li>
+        {% endfor %}
+      </ul>
+
+      <!-- Mobile Dropdown Menu (Hidden on medium screens and up) -->
+      <div class="md:hidden relative">
+        <label for="mobile-category-nav" class="sr-only">Select Category</label>
+        <select id="mobile-category-nav"
+          class="w-full appearance-none p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 bg-white text-gray-800 dark:text-white rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent"
+          data-target="#product-grid">
+          
+          <option value="{% url 'shop' %}" {% if request.path == '/shops/' %}selected{% endif %}>
+            All Drops
+          </option>
+
+          {% for drop in drops %}
+          <option value="{% url 'shop_drop' drop %}" {% if page|lower == drop|lower %}selected{% endif %}>
+            {{ drop }}
+          </option>
+          {% endfor %}
+        </select>
+
+        <!-- Custom Arrow for Mobile Dropdown -->
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+          <i class="fas fa-chevron-down"></i>
+        </div>
+      </div>
+    </nav>
+    {% endif %}
+
+    <!-- Sort Section (Now centered) -->
+    <div class="mb-8">
+      <form method="get" action="{% url 'shop' %}" id="sort-form" data-target="#product-grid">
+        {% csrf_token %} <!-- Note: CSRF not needed for GET forms, but harmless -->
+        <div class="relative inline-block">
+          <label for="sort" class="font-semibold font-heading mr-2">Sort By</label>
+          <select name="sort" id="sort"
+            class="ajax-sort appearance-none p-2 pr-8 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 bg-white text-gray-800 dark:text-white rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent font-body">
+            
+            <option value=" ">All Products</option>
+            <optgroup label="Sort by Time">
+              <option value="newest" {% if request.GET.sort == "newest" %}selected{% endif %}>Newest First</option>
+              <option value="oldest" {% if request.GET.sort == "oldest" %}selected{% endif %}>Oldest First</option>
+            </optgroup>
+            <optgroup label="Sort by Price">
+              <option value="low-high" {% if request.GET.sort == "low-high" %}selected{% endif %}>Low to High</option>
+              <option value="high-low" {% if request.GET.sort == "high-low" %}selected{% endif %}>High to Low</option>
+            </optgroup>
+          </select>
+          <!-- Custom Arrow -->
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Product Grid -->
+  <section id="product-grid" class="container mx-auto px-4">
+    {% include "products/_product_grid.html" %}
+  </section>
+
+  <!-- Pagination (wrapped in container for proper alignment) -->
+  {% if products.has_other_pages %}
+    <div class="mt-8 flex justify-center space-x-2 container mx-auto px-4">
+      {% if products.has_previous %}
+        <a href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md hover:bg-accent dark:hover:bg-accent hover:text-white">Previous</a>
+      {% endif %}
+      {% for num in products.paginator.page_range %}
+        <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 {% if products.number == num %}bg-accent text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white{% endif %} rounded-md hover:bg-accent dark:hover:bg-accent hover:text-white">{{ num }}</a>
+      {% endfor %}
+      {% if products.has_next %}
+        <a href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md hover:bg-accent dark:hover:bg-accent hover:text-white">Next</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".ajax-form").forEach(form => {
+    form.addEventListener("change", function(e) {
+      const formData = new FormData(form);
+      const targetSelector = form.dataset.target;
+      const url = form.action + "?" + new URLSearchParams(formData).toString();
+
+      fetch(url, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+      .then(res => res.text())
+      .then(html => {
+        document.querySelector(targetSelector).innerHTML = html;
+      });
+    });
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const sortSelect = document.querySelector("#sort");
+
+  if (sortSelect) {
+    sortSelect.addEventListener("change", function () {
+      const form = document.querySelector("#sort-form");
+      const targetSelector = form.dataset.target;
+      const formData = new FormData(form);
+      const url = form.action + "?" + new URLSearchParams(formData).toString();
+
+      fetch(url, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+      .then(res => res.text())
+      .then(html => {
+        document.querySelector(targetSelector).innerHTML = html;
+      })
+      .catch(err => console.error("AJAX error:", err));
+    });
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const mobileDropSelect = document.getElementById("mobile-category-nav");
+
+  if (mobileDropSelect) {
+    mobileDropSelect.addEventListener("change", function () {
+      const url = this.value;
+      const targetSelector = this.dataset.target;
+
+      fetch(url, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+      .then(res => res.text())
+      .then(html => {
+        document.querySelector(targetSelector).innerHTML = html;
+      })
+      .catch(err => console.error("AJAX error:", err));
+    });
+  }
+});
+</script>
+
+{% endblock %}

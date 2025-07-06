@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Update Your Details{% endblock %}
+{% block content %}
+  <!-- Update Details Section -->
+  <section class="py-12">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold font-heading mb-4">Update Your Details</h2>
+      <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
+        Keep your Wimer account information up to date.
+      </p>
+    </div>
+    <div class="max-w-md mx-auto">
+      <!-- Update Details Form -->
+      <form method="post" action="{% url 'update_detail' %}" class="space-y-6">
+        {% csrf_token %}
+        <!-- Form Errors -->
+        {% if user_form.errors or detail_form.errors %}
+          <div class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 p-4 rounded-md font-body">
+            {% for field in user_form %}
+              {% for error in field.errors %}
+                <p>{{ field.label }}: {{ error }}</p>
+              {% endfor %}
+            {% endfor %}
+            {% for error in user_form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+            {% for field in detail_form %}
+              {% for error in field.errors %}
+                <p>{{ field.label }}: {{ error }}</p>
+              {% endfor %}
+            {% endfor %}
+            {% for error in detail_form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <!-- User Form Fields: First Name and Last Name Side by Side -->
+        <div class="flex gap-4">
+          <div class="w-1/2">
+            <label for="id_first_name" class="block text-lg font-semibold font-heading mb-2">First Name</label>
+            <input type="text" id="id_first_name" name="first_name" value="{{ user_form.first_name.value|default:request.user.first_name }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your first name">
+          </div>
+          <div class="w-1/2">
+            <label for="id_last_name" class="block text-lg font-semibold font-heading mb-2">Last Name</label>
+            <input type="text" id="id_last_name" name="last_name" value="{{ user_form.last_name.value|default:request.user.last_name }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your last name">
+          </div>
+        </div>
+        <!-- Other User Form Fields -->
+        <div>
+          <label for="id_email" class="block text-lg font-semibold font-heading mb-2">Email</label>
+          <input type="email" id="id_email" name="email" value="{{ user_form.email.value|default:request.user.email }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your email">
+        </div>
+        <!-- User Detail Form Fields -->
+        <div>
+          <label for="id_phone_number" class="block text-lg font-semibold font-heading mb-2">Phone Number</label>
+          <input type="tel" id="id_phone_number" name="phone_number" value="{{ detail_form.phone_number.value|default:'' }}" required pattern="\+[0-9]{12,14}" inputmode="numeric" class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="+1234567890098">
+        </div>
+        <div>
+          <label for="id_address" class="block text-lg font-semibold font-heading mb-2">Delivery Address</label>
+          <input type="text" id="id_address" name="delivery_address" value="{{ detail_form.delivery_address.value|default:'' }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your address">
+        </div>
+        <!-- Submit Button -->
+        <button type="submit" class="w-full bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition">Update Details</button>
+      </form>
+      <!-- Link to Profile or Home -->
+      <p class="text-center text-gray-600 dark:text-gray-300 font-body mt-6">
+        Back to <a href="{% url 'home' %}" class="text-accent hover:underline">Home</a>.
+      </p>
+    </div>
+  </section>
+{% endblock %}

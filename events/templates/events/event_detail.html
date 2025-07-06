@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ event.title }} | Event Details{% endblock %}
+
+{% block content %}
+<section class="py-8 md:py-12 bg-white dark:bg-slate-900 font-body">
+  <div class="mb-8">
+      <a href="{% url 'events' %}" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white font-semibold transition-colors group">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 transition-transform group-hover:-translate-x-1">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        Back to All Events
+      </a>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-12 lg:gap-x-12">
+      
+      <div class="lg:col-span-5 mb-8 lg:mb-0">
+        <div class="lg:sticky lg:top-24 space-y-6">
+          <!-- Event Image -->
+          {% if event.image %}
+            <img src="{{ event.image.url }}" alt="Flyer for {{ event.title }}" class="w-full object-cover rounded-xl shadow-lg">
+          {% else %}
+            <!-- Placeholder for when there's no image -->
+            <div class="aspect-w-4 aspect-h-5 w-full bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center">
+                <span class="text-gray-400">No Image Available</span>
+            </div>
+          {% endif %}
+
+          <!-- Ticket Button -->
+          {% if upcoming %}
+              <a href="" target="_blank" rel="noopener noreferrer" class="mt-6 block w-full bg-indigo-600 text-white text-center font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300">
+                Get Ticket
+              </a>
+            </a>
+          {% else %}
+            <div class="block w-full bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-center font-bold py-4 px-4 rounded-lg cursor-not-allowed">
+              Event Has Passed
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="lg:col-span-7">
+        
+        <!-- Event Title -->
+        <h1 class="text-3xl md:text-4xl font-bold font-heading text-gray-900 dark:text-white mb-6">
+            {{ event.title|upper }}
+        </h1>
+        
+        <!-- Info List (Date, Time, Location) -->
+        <h2 class="text-6xl font-semibold font-heading mb-4 text-gray-900 dark:text-white">{{ event.name|upper }}</h2>
+        <hr class="my-2 border-gray-200 dark:border-gray-700">
+
+        <div class="space-y-4 text-gray-700 dark:text-gray-300">
+            <div class="flex items-center gap-4">
+              <!-- Using inline SVG for easy color control with 'currentColor' -->
+              <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <span class="text-lg">{{ event.date|date:"l, F jS Y" }}</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+              <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span class="text-lg">{{ event.date|time:"g:i A T" }} {% comment %}  - {{ event.end_time|time:"g:i A T" }}</span> {% endcomment %}
+            </div>
+
+            <div class="flex items-center gap-4">
+              <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              <span class="text-lg">{{ event.location|title }}</span>
+            </div>
+        </div>
+
+        <hr class="my-8 border-gray-200 dark:border-gray-700">
+        
+        <!-- About this event -->
+        <h2 class="text-2xl font-semibold font-heading mb-4 text-gray-900 dark:text-white">About this event</h2>
+        <div class="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+            {{ event.description|safe|default:"No description provided." }}
+        </div>
+        
+        <hr class="my-8 border-gray-200 dark:border-gray-700">
+
+        <!-- Directions / Map -->
+        <h2 class="text-2xl font-semibold font-heading mb-4 text-gray-900 dark:text-white">Directions</h2>
+        <div style="width: 100%; height: 400px;">
+          <iframe
+            src="https://www.google.com/maps?q={{ event.latitude }},{{ event.longitude }}&z=15&output=embed"
+            width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
