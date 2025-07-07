@@ -1,9 +1,16 @@
+import json
+import uuid
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib import messages
+from django.utils import timezone
 from .models import Cart
+from payment.models import Payment
+from django.urls import reverse
+from payment.paystack import checkout
+from orders.models import OrderItem, Order
 from products.models import ProductVariant
 from django.template.loader import render_to_string
 
@@ -127,3 +134,101 @@ def removeCart(request, cart_id):
         else:
             return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+
+@login_required(login_url="login")
+def checkoutPage(request):
+    user = request.user
+
+    cart_items = Cart.objects.filter(user=user)
+    if not cart_items.exists():
+        messages.error(request, "Your cart is empty.")
+        return redirect("home")
+
+    cart_subtotal = sum(item.total_price for item in cart_items)
+
+    if request.method == "POST":
+        unique_id = uuid.uuid4()
+        # Create or get pending order
+        order, created = Order.objects.get_or_create(
+            user=user,
+            order_id=unique_id,
+            status="pending",
+            defaults={
+                "total_amount": cart_subtotal,
+                "shipping_address": user.userdetail.delivery_address,
+            },
+        )
+
+        # Loop through cart items and create order items
+        for cart_item in cart_items:
+            OrderItem.objects.get_or_create(
+                order=order,
+                variant=cart_item.variant,
+                defaults={
+                    "quantity": cart_item.quantity,
+                    "price": cart_item.variant.price,
+                },
+            )
+
+        # cart_items.delete()
+
+        # convert UUID to string (cos 'Object of type UUID is not JSON serializable' lol)
+        json_data = json.dumps({
+            "order_id": str(order.order_id)
+        })
+
+        # Build callback URL
+        payment_success_url = reverse(
+            "payment-success", kwargs={"order_id": order.order_id}
+        )
+        callback_url = f"{request.scheme}://{request.get_host()}{payment_success_url}"
+
+        checkout_data = {
+            "email": user.email,
+            "amount": int(order.total_amount * 100),  # convert to kobo
+            "currency": "NGN",
+            "channels": ["card", "bank_transfer", "bank", "ussd", "qr", "mobile_money"],
+            "reference": str(order.order_id),
+            "callback_url": callback_url,
+            "metadata": {
+                "order_id": str(order.order_id),
+                "user_id": user.id,
+            },
+            "label": f"Checkout For order_{order.order_id}",
+        }
+
+        # Call checkout logic
+        status, checkout_url, payment_reference = checkout(checkout_data)
+
+        print(status, checkout_url, payment_reference)
+
+        payment, create = Payment.objects.get_or_create(
+            order=order,
+            user=user,
+            defaults={
+                "amount": order.total_amount,
+            }
+        )
+
+        if status:
+            order.status = "paid"
+            order.updated_at = timezone.now()
+            payment.payment_reference = payment_reference
+            payment.status = "success"
+            payment.paid_at = timezone.now()
+            return redirect(checkout_url)
+        else:
+            order.status = "failed"
+            order.updated_at = timezone.now()
+            payment.status = "failed"
+            payment.paid_at = timezone.now()
+            messages.error(request, checkout_url)  # show error message
+            return redirect("payment-fail", order.order_id)
+
+    context = {
+        "user": user,
+        "cart_items": cart_items,
+        "cart_subtotal": cart_subtotal,
+    }
+    return render(request, "cart/checkout.html", context)

@@ -1,14 +1,12 @@
 import os
-from dotenv import load_dotenv
 from pathlib import Path
-
-load_dotenv()
+from decouple import config
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = config("SECRET_KEY")
 
 DEBUG = True
 
@@ -28,6 +26,8 @@ INSTALLED_APPS = [
     "contact",
     "events",
     "gallery",
+    "orders",
+    "payment",
 ]
 
 MIDDLEWARE = [
@@ -40,7 +40,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CSRF_TRUSTED_ORIGINS = ["https://*.ngrok-free.app"]
+CSRF_TRUSTED_ORIGINS = ["https://*.ngrok-free.app"]  # Change this shit later
 
 ROOT_URLCONF = "wimer.urls"
 
@@ -102,7 +102,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY')
+PAYSTACK_SECRET_KEY = config("PAYSTACK_SECRET_KEY")
 
 
 MEDIA_URL = "/media/"

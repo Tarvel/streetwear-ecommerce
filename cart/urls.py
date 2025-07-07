@@ -8,4 +8,5 @@ urlpatterns = [
     path("update/<int:variant_id>/", views.updateCartShop, name="update_cart_shop"),
     path("delete/<int:cart_id>/", views.removeCart, name="delete_cart"),
     path("", views.cartPage, name="cart"),
+    path("checkout/", views.checkoutPage, name="checkout"),
 ]

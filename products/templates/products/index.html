@@ -63,6 +63,7 @@
             <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
           </div>
           <h3 class="text-lg md:text-xl font-semibold font-heading truncate">{{ product.name }}</h3>
+          <p class="text-gray-600 dark:text-gray-300 font-body">{{ product.drop.name|title}}</p>
           <b class="text-gray-600 dark:text-gray-300 font-body">₦{{ product.base_price|intcomma }}</b>
           {% comment %} <small class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ product.stock_quantity }} items left</small> {% endcomment %}
         </a>

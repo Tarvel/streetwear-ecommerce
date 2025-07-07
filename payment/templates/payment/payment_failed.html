@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Payment Failed{% endblock %}
+{% block content %}
+{% load humanize %}
+  <section class="py-12">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold font-heading mb-4">Payment Failed</h2>
+      <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
+        {{ message|default:"There was an issue processing your payment. Please try again." }}
+      </p>
+    </div>
+    <div class="max-w-4xl mx-auto">
+      {% if cart_items %}
+        <h3 class="text-2xl font-semibold font-heading mb-4">Your Cart</h3>
+        <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+          {% for item in cart_items %}
+            <div class="flex justify-between items-center py-2 {% if not forloop.last %}border-b border-gray-200 dark:border-gray-700{% endif %}">
+              <div>
+                <p class="font-body font-semibold">{{ item.product.name }} ({{ item.size }})</p>
+                <p class="text-gray-600 dark:text-gray-300 font-body text-sm">Qty: {{ item.quantity }}</p>
+              </div>
+              <p class="font-body font-semibold">₦{{ item.total_price|intcomma }}</p>
+            </div>
+          {% endfor %}
+          <div class="flex justify-between items-center pt-4 mt-4 border-t border-gray-300 dark:border-gray-600">
+            <p class="text-lg font-semibold font-heading">Total</p>
+            <p class="text-lg font-semibold font-heading text-accent">₦{{ cart_subtotal|intcomma }}</p>
+          </div>
+        </div>
+      {% else %}
+        <p class="text-gray-600 dark:text-gray-300 font-body text-center">Your cart is empty.</p>
+      {% endif %}
+      <div class="flex space-x-4 mt-6 justify-center">
+        {% if cart_items %}
+          <a href="{% url 'checkout' %}" class="bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition">Retry Payment</a>
+        {% endif %}
+        <a href="{% url 'cart' %}" class="text-accent hover:underline font-body">Return to Cart</a>
+        <a href="{% url 'shop' %}" class="text-accent hover:underline font-body">Continue Shopping</a>
+      </div>
+    </div>
+  </section>
+{% endblock %}

@@ -19,9 +19,9 @@
                 <img src="{{ item.variant.image.url }}"
                      alt="{{ item.variant.product.name }}"
                      class="w-20 h-20 md:w-16 md:h-16 object-cover rounded-md flex-shrink-0">
-              </a>
+              
               <div>
-                <h3 class="text-lg font-semibold font-heading">{{ item.variant.product.name }}</h3>
+                <h3 class="text-lg font-semibold font-heading">{{ item.variant.product.name }}</h3></a>
                 <p class="text-gray-600 dark:text-gray-300 font-body">
                   Selected: {% if item.variant.size != "NA" %}{{ item.variant.size }} - {% endif %}{% if item.variant.colour %}{{ item.variant.colour|title }}{% endif %}
                 </p>
@@ -102,7 +102,7 @@
         <span>Estimated Total</span>
         <span>₦{{ cart_subtotal|intcomma }}</span>
       </div>
-      <a href="#" class="block w-full bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition text-center">
+      <a href="{% url 'checkout' %}" class="block w-full bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition text-center">
         Proceed to Checkout
       </a>
     </div>
