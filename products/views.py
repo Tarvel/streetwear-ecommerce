@@ -92,7 +92,7 @@ def shopDrops(request, drop):
     }
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return render(request, "products/_product_grid.html", context)
-    
+
     return render(request, "products/shop.html", context)
 
 

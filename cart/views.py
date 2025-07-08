@@ -138,7 +138,11 @@ def removeCart(request, cart_id):
 
 @login_required(login_url="login")
 def checkoutPage(request):
-    user = request.user
+    if request.user.is_authenticated:
+        user = request.user
+    else:
+        messages.info(request, "Please login to access checkout")
+        return redirect("login")
 
     cart_items = Cart.objects.filter(user=user)
     if not cart_items.exists():
@@ -148,11 +152,15 @@ def checkoutPage(request):
     cart_subtotal = sum(item.total_price for item in cart_items)
 
     if request.method == "POST":
-        unique_id = uuid.uuid4()
-        # Create or get pending order
+        # generate unique ids for order and payment reference
+        unique_order_id = uuid.uuid4()
+        unique_reference_id = f"ord-{uuid.uuid4().hex[0:8]}"
+
+        # Createing or get pending order
         order, created = Order.objects.get_or_create(
             user=user,
-            order_id=unique_id,
+            order_id=unique_order_id,
+            reference=unique_reference_id,
             status="pending",
             defaults={
                 "total_amount": cart_subtotal,
@@ -171,12 +179,10 @@ def checkoutPage(request):
                 },
             )
 
-        # cart_items.delete()
+        cart_items.delete()
 
         # convert UUID to string (cos 'Object of type UUID is not JSON serializable' lol)
-        json_data = json.dumps({
-            "order_id": str(order.order_id)
-        })
+        json_data = json.dumps({"order_id": str(order.order_id)})
 
         # Build callback URL
         payment_success_url = reverse(
@@ -189,41 +195,46 @@ def checkoutPage(request):
             "amount": int(order.total_amount * 100),  # convert to kobo
             "currency": "NGN",
             "channels": ["card", "bank_transfer", "bank", "ussd", "qr", "mobile_money"],
-            "reference": str(order.order_id),
+            "reference": str(order.reference),
             "callback_url": callback_url,
             "metadata": {
                 "order_id": str(order.order_id),
                 "user_id": user.id,
+                "payment_reference": order.reference,
             },
-            "label": f"Checkout For order_{order.order_id}",
+            "label": f"Checkout For order: {order.order_id}",
         }
 
         # Call checkout logic
         status, checkout_url, payment_reference = checkout(checkout_data)
 
-        print(status, checkout_url, payment_reference)
-
-        payment, create = Payment.objects.get_or_create(
-            order=order,
-            user=user,
-            defaults={
-                "amount": order.total_amount,
-            }
-        )
-
         if status:
-            order.status = "paid"
+            # if the connection to paystack is sucessful, update the order status to pending (default), cos, technically, the payment is in a pending state unless payment is scuessful
+            # we will get this success status from our webhook
             order.updated_at = timezone.now()
-            payment.payment_reference = payment_reference
-            payment.status = "success"
-            payment.paid_at = timezone.now()
+            order.save()
             return redirect(checkout_url)
+
         else:
+            # if theres an error, first update the order status and time the error in payment occured, then make a failed payment instance sha
+
             order.status = "failed"
             order.updated_at = timezone.now()
+            order.save()
+
+            payment, create = Payment.objects.get_or_create(
+                order=order,
+                user=user,
+                defaults={
+                    "amount": order.total_amount,
+                },
+            )
+
             payment.status = "failed"
             payment.paid_at = timezone.now()
-            messages.error(request, checkout_url)  # show error message
+            payment.save()
+
+            messages.error(request, checkout_url)  # Shows error message
             return redirect("payment-fail", order.order_id)
 
     context = {

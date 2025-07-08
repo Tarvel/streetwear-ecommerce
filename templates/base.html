@@ -94,12 +94,12 @@
         <div class="relative group hidden md:block">
           <button class="text-xl hover:text-accent dark:hover:text-accent"><i class="fas fa-user"></i></button>
           <ul class="absolute hidden group-hover:block bg-white dark:bg-gray-900 shadow-lg rounded overflow-hidden right-0 w-40">
-            {% if user.is_authenticated %}
+            {% if request.user.is_authenticated %}
               <li class="border-b border-gray-200 dark:border-gray-700">
                 <a href="{% url 'update_detail' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Settings</a>
               </li>
               <li class="border-b border-gray-200 dark:border-gray-700">
-                <a href="" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">History</a>
+                <a href="{% url 'order-history' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">History</a>
               </li>
               <li>
                 <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Logout</a>
@@ -133,9 +133,9 @@
       <hr class="my-6 border-gray-300 dark:border-gray-600">
       <h3 class="font-heading text-xl font-bold mb-4 uppercase">Account</h3>
       <ul class="space-y-4 font-body">
-        {% if user.is_authenticated %}
+        {% if request.user.is_authenticated %}
           <li><a href="{% url 'update_detail' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-cog fa-fw w-5"></i><span>Settings</span></a></li>
-          <li><a href="" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-history fa-fw w-5"></i><span>History</span></a></li>
+          <li><a href="{% url 'order-history' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-history fa-fw w-5"></i><span>History</span></a></li>
           <li><a href="{% url 'logout' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-sign-out-alt fa-fw w-5"></i><span>Logout</span></a></li>
         {% else %}
           <li><a href="{% url 'login' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-sign-in-alt fa-fw w-5"></i><span>Login</span></a></li>

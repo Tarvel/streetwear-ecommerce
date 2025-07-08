@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Order History{% endblock %}
+{% block content %}
+{% load humanize %}
+
+<section class="bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+  <div class="max-w-4xl mx-auto">
+
+    <!-- Page Heading -->
+    <div class="text-center mb-10 md:mb-12">
+      <h2 class="text-3xl sm:text-4xl font-bold font-heading mb-3">Your Order History</h2>
+      <p class="text-gray-600 dark:text-gray-400 font-body text-lg">
+        Review the details of all your past orders below.
+      </p>
+    </div>
+
+    {% if orders %}
+      <!-- List of Order Cards -->
+      <div class="space-y-8">
+        {% for order in orders %}
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-shadow hover:shadow-xl">
+            <!-- Card Header -->
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+              <div>
+                <h3 class="text-lg font-semibold font-heading text-gray-900 dark:text-white">Order #{{ order.id }}</h3>
+                <p class="text-sm font-body text-gray-500 dark:text-gray-400 mt-1">
+                  Placed on {{ order.created_at|date:"F j, Y" }}
+                </p>
+              </div>
+              <div class="flex items-center gap-4 sm:gap-6">
+                 <p class="text-lg font-semibold font-heading text-accent">₦{{ order.total_amount|intcomma }}</p>
+                 <!-- Status Badge with dynamic coloring -->
+                 <span class="
+                    font-semibold text-xs py-1 px-3 rounded-full
+                    {% if order.status == 'Delivered' %} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                    {% elif order.status == 'Shipped' %} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                    {% elif order.status == 'Cancelled' %} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                    {% else %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 {% endif %}
+                  ">
+                    {{ order.status|default:"Processing"|title }}
+                  </span>
+              </div>
+            </div>
+
+            <!-- Card Body with a few item previews -->
+            <div class="p-6">
+                <p class="font-body font-medium text-gray-700 dark:text-gray-200 mb-3">Includes:</p>
+                <div class="space-y-2">
+                    {% for item in order.items.all|slice:":2" %} {# Show first 2 items as a preview #}
+                    <div class="flex items-center text-sm font-body text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 mr-2 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>{{ item.quantity }} x {{ item.variant.product.name }}</span>
+                    </div>
+                    {% endfor %}
+                    {% if order.items.all|length > 2 %}
+                        <p class="text-sm font-body text-gray-500 dark:text-gray-400 pl-6">...and {{ order.items.all|length|add:"-2" }} more item(s).</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Card Footer with Action Button -->
+            <div class="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl text-right">
+                <!-- NOTE: You need to create a URL named 'order_detail' that takes an order ID -->
+                <a href="{% url 'order-detail' order.order_id %}" class="font-body font-semibold text-gray-800 hover:underline">
+                    View Details →
+                </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- Empty State: When there are no orders -->
+      <div class="text-center bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 md:p-12">
+        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.092 1.21-.138 2.43-.138 3.662v4.286a4.006 4.006 0 003.7 3.7 48.678 48.678 0 007.324 0 4.006 4.006 0 003.7-3.7v-4.286zM12 15a3 3 0 100-6 3 3 0 000 6z" />
+        </svg>
+        <h3 class="text-2xl font-bold font-heading text-gray-800 dark:text-white">No Orders Yet</h3>
+        <p class="text-gray-600 dark:text-gray-400 font-body mt-2 mb-6">
+          You haven't placed any orders with us. Let's change that!
+        </p>
+        <a href="{% url 'shop' %}" class="inline-block font-body font-semibold bg-accent text-white py-3 px-8 rounded-lg hover:bg-opacity-90 transition-colors duration-300">
+          Start Shopping
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

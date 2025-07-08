@@ -12,6 +12,7 @@ urlpatterns = [
     path("events/", include("events.urls")),
     path("gallery/", include("gallery.urls")),
     path("payment/", include("payment.urls")),
+    path("orders/", include("orders.urls")),
 ]
 
 

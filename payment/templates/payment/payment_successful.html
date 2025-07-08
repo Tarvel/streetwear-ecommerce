@@ -2,44 +2,87 @@
 {% block title %}Payment Successful{% endblock %}
 {% block content %}
 {% load humanize %}
-  <section class="py-12">
-    <div class="text-center mb-12">
-      <h2 class="text-4xl font-bold font-heading mb-4">Payment Successful!</h2>
-      <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
-        Thank you, {{ user.first_name }}! Your payment was successful, and your order is confirmed.
+
+<!-- Use a container with padding for consistent spacing -->
+<section class="bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+  <div class="max-w-2xl mx-auto">
+
+    <!-- Success Icon and Main Heading -->
+    <div class="text-center">
+      <!-- A friendly checkmark icon for instant visual feedback -->
+      <svg class="w-16 h-16 mx-auto mb-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <h2 class="text-3xl sm:text-4xl font-bold font-heading mb-3">Payment Successful!</h2>
+      <p class="text-gray-600 dark:text-gray-400 font-body text-lg">
+        Thank you, {{ user.first_name }}! Your order is confirmed.
       </p>
     </div>
-    <div class="max-w-4xl mx-auto">
-      <h3 class="text-2xl font-semibold font-heading mb-4">Order #{{ order.id }}</h3>
-      <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+
+    <!-- Order Details Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg mt-8 sm:mt-12 p-6 md:p-8">
+      
+      <h3 class="text-xl sm:text-2xl font-semibold font-heading mb-6 text-center sm:text-left">Order #{{ order.id }}</h3>
+      
+      <!-- List of Items -->
+      <div class="space-y-4">
         {% for item in order.items.all %}
-          <div class="flex justify-between items-center py-2 {% if not forloop.last %}border-b border-gray-200 dark:border-gray-700{% endif %}">
+          <!-- Item Row: Stacks on mobile, row on desktop -->
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center py-4 {% if not forloop.last %}border-b border-gray-200 dark:border-gray-700{% endif %}">
+            <!-- Item Details -->
             <div>
-              <p class="font-body font-semibold">{{ item.variant.product.name }} ({% if item.variant.size != "NA" %}{{ item.variant.size }} - {% endif %}{% if item.variant.colour %}{{ item.variant.colour|title }}{% endif %})</p>
-              <p class="text-gray-600 dark:text-gray-300 font-body text-sm">Qty: {{ item.quantity }}</p>
+              <p class="font-body font-semibold text-gray-800 dark:text-gray-100">{{ item.variant.product.name }}</p>
+              <p class="font-body text-sm text-gray-500 dark:text-gray-400">
+                {% if item.variant.size != "NA" %}{{ item.variant.size }}{% endif %}
+                {% if item.variant.size != "NA" and item.variant.colour %} - {% endif %}
+                {% if item.variant.colour %}{{ item.variant.colour|title }}{% endif %}
+              </p>
+              <p class="font-body text-sm text-gray-500 dark:text-gray-400 mt-1 sm:hidden">Qty: {{ item.quantity }}</p>
             </div>
-            <p class="font-body font-semibold">₦{{ item.price|intcomma }} x {{ item.quantity }}</p>
+            <!-- Price and Quantity -->
+            <div class="font-body font-semibold text-gray-800 dark:text-gray-100 mt-2 sm:mt-0 text-left sm:text-right">
+              <p>₦{{ item.price|intcomma }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 font-normal hidden sm:block">Qty: {{ item.quantity }}</p>
+            </div>
           </div>
         {% endfor %}
-        <div class="flex justify-between items-center pt-4 mt-4 border-t border-gray-300 dark:border-gray-600">
-          <p class="text-lg font-semibold font-heading">Total</p>
-          <p class="text-lg font-semibold font-heading text-accent">₦{{ order.total_amount|intcomma }}</p>
-        </div>
       </div>
-      <p class="text-gray-600 dark:text-gray-300 font-body mt-4">
-        <strong>Shipping to:</strong> {{ order.shipping_address }}<br>
-        <strong>Contact:</strong> {{ order.phone_number }}<br>
-        {% for payment in item.payments.all %}
-        {% if payment.status == "success" %}
-        <strong>Payment Reference:</strong> {{ item.payments.payment_reference }}
-        {% endif %}
+
+      <!-- Total Section -->
+      <div class="flex justify-between items-center pt-6 mt-6 border-t-2 border-gray-200 dark:border-gray-700">
+        <p class="text-lg font-semibold font-heading">Total</p>
+        <p class="text-xl font-bold font-heading text-accent">₦{{ order.total_amount|intcomma }}</p>
+      </div>
+
+      <!-- Shipping and Payment Details -->
+      <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 space-y-3 text-sm font-body text-gray-600 dark:text-gray-300">
+        <div>
+          <strong class="text-gray-800 dark:text-gray-100">Shipping to:</strong> {{ order.shipping_address }}
+        </div>
+        <div>
+          <strong class="text-gray-800 dark:text-gray-100">Contact:</strong> {{ user.userdetail.phone_number }}
+        </div>
+        {% for payment in order.payments.all %}
+          {% if payment.status == "success" %}
+            <div>
+              <strong class="text-gray-800 dark:text-gray-100">Payment Ref:</strong> {{ payment.payment_reference }}
+            </div>
+          {% endif %}
         {% endfor %}
-          
-      </p>
-      <div class="flex space-x-4 mt-6 justify-center">
-        <a href="{% url 'shop' %}" class="text-accent hover:underline font-body">Continue Shopping</a>
-        <a href="{% url 'update_detail' %}" class="text-accent hover:underline font-body">Update Profile</a>
       </div>
     </div>
-  </section>
-{% endblock %}
+    
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mt-8">
+      <a href="{% url 'shop' %}" class="w-full sm:w-auto text-center font-body font-semibold text-white py-3 px-6 rounded-lg bg-gray-800 hover:bg-accent  duration-300">
+        Continue Shopping
+      </a>
+      <a href="{% url 'update_detail' %}" class="w-full sm:w-auto text-center font-body font-semibold text-gray-800 border border-gray-800 hover:border-accent  py-3 px-6 rounded-lg hover:bg-accent hover:text-white transition-colors duration-300">
+        View Profile
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}bg-gray-800 hover:bg-accent 

@@ -1,6 +1,7 @@
 import uuid
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import CustomUserCreationForm, UserDetailForm, UserForm
 from .models import UserDetail
@@ -48,6 +49,7 @@ def loginPage(request):
 
         if user is not None:
             login(request, user)
+            messages.info(request, f"Welcome back, {request.user.first_name}!")
             next_url = request.POST.get("next") or "home"
             return redirect(next_url)
         else:
@@ -61,9 +63,12 @@ def logoutPage(request):
     logout(request)
     return redirect("home")
 
-
-def updatePage(request):
-    user = request.user
+@login_required
+def update_details(request):
+    if request.user.is_authenticated:
+        user = request.user
+    else:
+        return redirect("login")
     UserDetail.objects.get_or_create(user=user)
 
     if request.method == 'POST':

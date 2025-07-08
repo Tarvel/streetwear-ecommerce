@@ -7,7 +7,7 @@ import uuid
 class Payment(models.Model):
     STATUS_CHOICES = [
         ("pending", "Pending"),
-        ("success", "Success"),
+        ("success", "Success"), 
         ("failed", "Failed"),
     ]
 
