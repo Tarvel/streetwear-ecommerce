@@ -109,18 +109,30 @@
       <a href="{% url 'order-history' %}" class="w-full sm:w-auto text-center font-body font-semibold text-gray-800 border border-gray-800 hover:border-gray-800 py-3 px-6 rounded-lg hover:bg-gray-800  hover:text-white transition-colors duration-300">
         ← Back to Order History
       </a>
-      {% for payment in order.payments.all %}
-      {% if payment.status == "failed" %}
-        <a href="{% url 'payment-retry' order.order_id %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors duration-300">
+      
+      {% if order.payments.all or show_retry_button %}
+  {% for payment in order.payments.all %}
+    {% if payment.status == "failed" or show_retry_button %}
+      <a href="{% url 'payment-retry' order.order_id %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-accent transition-colors duration-300">
             Retry Payment
         </a>
         {% else %}
-            <a href="{% url 'shop' %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors duration-300">
+            <a href="{% url 'shop' %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-accent transition-colors duration-300">
                 Continue Shopping
             </a>
-        {% endif %}
-      {% endfor %}
-        
+    {% endif %}
+  {% empty %}
+    {% if show_retry_button %}
+      <a href="{% url 'payment-retry' order.order_id %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-accent transition-colors duration-300">
+            Retry Payment
+        </a>
+      {% else %}
+            <a href="{% url 'shop' %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-accent transition-colors duration-300">
+                Continue Shopping
+            </a>
+    {% endif %}
+  {% endfor %}
+{% endif %}
       
       <!-- 
         OPTIONAL: Add a tracking button if the order is shipped and has a tracking number.

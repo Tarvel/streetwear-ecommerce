@@ -2,12 +2,12 @@ from django.db import models
 from cart.models import Cart
 from orders.models import Order
 from django.contrib.auth.models import User
-import uuid
+
 
 class Payment(models.Model):
     STATUS_CHOICES = [
         ("pending", "Pending"),
-        ("success", "Success"), 
+        ("success", "Success"),
         ("failed", "Failed"),
     ]
 

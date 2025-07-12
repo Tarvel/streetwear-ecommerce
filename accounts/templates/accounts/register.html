@@ -1,54 +1,56 @@
 {% extends 'base.html' %}
+{% load socialaccount %}
 {% block title %}Register{% endblock %}
 {% block content %}
   <!-- Register Section -->
   <section class="py-12">
-    <div class="text-center mb-12">
+    <div class="text-center mb-12 px-4">
       <h2 class="text-4xl font-bold font-heading mb-4">Join the Wimer Crew</h2>
       <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
         Create an account to shop our exclusive streetwear and join our community.
       </p>
     </div>
-    <div class="max-w-md mx-auto">
+    <div class="max-w-md mx-auto px-4">
       <!-- Register Form -->
       <form method="post" action="{% url 'register' %}" class="space-y-6">
         {% csrf_token %}
         <!-- Form Errors -->
-        {% if user_form.errors or detail_form.errors %}
+        {% if user_form.errors  %}
           <div class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 p-4 rounded-md font-body">
             {% for field in user_form %}
               {% for error in field.errors %}
-                <p>{{ field.label }}: {{ error }}</p>
+                <p>{{ error }}</p>
               {% endfor %}
             {% endfor %}
             {% for error in user_form.non_field_errors %}
               <p>{{ error }}</p>
             {% endfor %}
- 
           </div>
         {% endif %}
-        <!-- User Form Fields: First Name and Last Name Side by Side -->
-        <div class="flex gap-4">
-          <div class="w-1/2">
+        
+        <!-- Responsive First Name and Last Name Fields -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="w-full sm:w-1/2">
             <label for="id_first_name" class="block text-lg font-semibold font-heading mb-2">First Name</label>
-            <input type="text" id="id_first_name" name="first_name" value="{{ user_form.first_name.value|default:'' }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your first name">
+            <input type="text" id="id_first_name" name="first_name" value="{{ user_form.first_name.value|default:'' }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Your first name">
           </div>
-          <div class="w-1/2">
+          <div class="w-full sm:w-1/2">
             <label for="id_last_name" class="block text-lg font-semibold font-heading mb-2">Last Name</label>
-            <input type="text" id="id_last_name" name="last_name" value="{{ user_form.last_name.value|default:'' }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your last name">
+            <input type="text" id="id_last_name" name="last_name" value="{{ user_form.last_name.value|default:'' }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Your last name">
           </div>
         </div>
+        
         <!-- Other User Form Fields -->
-        <div>
-          <label for="id_email" class="block text-lg font-semibold font-heading mb-2">Email</label>
-          <input type="email" id="id_email" name="email" value="{{ user_form.email.value|default:'' }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your email">
-        </div>
         <div>
           <input type="hidden" id="id_username" name="username" value="{{username}}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Choose a username">
         </div>
         <div>
+          <label for="id_email" class="block text-lg font-semibold font-heading mb-2">Email</label>
+          <input type="email" id="id_email" name="email" value="{{ user_form.email.value|default:'' }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Your email address">
+        </div>
+        <div>
           <label for="id_password1" class="block text-lg font-semibold font-heading mb-2">Password</label>
-          <input type="password" id="id_password1" name="password1" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your password">
+          <input type="password" id="id_password1" name="password1" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Create a password">
         </div>
         <div>
           <label for="id_password2" class="block text-lg font-semibold font-heading mb-2">Confirm Password</label>
@@ -58,6 +60,35 @@
         <!-- Submit Button -->
         <button type="submit" class="w-full bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition">Register</button>
       </form>
+
+      <!-- Divider -->
+      <div class="relative flex items-center justify-center my-6">
+        <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+        </div>
+        <div class="relative bg-white dark:bg-gray-800 px-4 text-sm text-gray-500 dark:text-gray-400 font-body">
+            OR
+        </div>
+      </div>
+      
+      <!-- Google Sign Up Button -->
+      <a href="{% provider_login_url 'google' process='login' %}" class="w-full flex items-center justify-center py-3 px-6 border border-gray-300 dark:border-gray-600 rounded-md font-body font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+        <svg class="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+          <!-- Red section (top left) -->
+          <path fill="#EA4335" d="M6.306,14.691l6.057,4.444c1.676-4.101,5.665-6.948,10.637-6.948c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+          
+          <!-- Yellow section (top) -->
+          <path fill="#FBBC05" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+          
+          <!-- Green section (bottom) -->
+          <path fill="#34A853" d="M12.717,28.054C12.261,26.775,12,25.404,12,24c0-1.404,0.261-2.775,0.717-4.054l-6.522-5.025C4.754,17.827,4,20.826,4,24c0,3.174,0.754,6.173,2.195,8.879L12.717,28.054z"/>
+          
+          <!-- Blue section (right horizontal bar) -->
+          <path fill="#4285F4" d="M44,24c0-1.341-0.138-2.65-0.389-3.917H24v8h11.303c-0.487,2.578-1.943,4.728-4.13,6.218l6.19,5.238C40.764,36.617,44,30.721,44,24z"/>
+        </svg>
+        Sign up with Google
+      </a>
+
       <!-- Link to Login -->
       <p class="text-center text-gray-600 dark:text-gray-300 font-body mt-6">
         Already have an account? <a href="{% url 'login' %}" class="text-accent hover:underline">Login here</a>.
@@ -65,25 +96,3 @@
     </div>
   </section>
 {% endblock %}
-
-
-{% comment %}
-        <!-- User Detail Form Fields -->
-        <div>
-          <label for="id_phone_number" class="block text-lg font-semibold font-heading mb-2">Phone Number</label>
-          <input type="tel" id="id_phone_number" name="phone_number" value="{{ detail_form.phone_number.value|default:'' }}" required pattern="\+[0-9]{12,14}" inputmode="numeric" class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="+1234567890098">
-        </div>
-        <div>
-          <label for="id_address" class="block text-lg font-semibold font-heading mb-2">Address</label>
-          <input type="text" id="id_address" name="address" value="{{ detail_form.address.value|default:'' }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your address">
-        </div>
-        {% endcomment %}
-        {% comment %} {% for field in detail_form %}
-              {% for error in field.errors %}
-                <p>{{ field.label }}: {{ error }}</p>
-              {% endfor %}
-            {% endfor %}
-            {% for error in detail_form.non_field_errors %}
-              <p>{{ error }}</p>
-            {% endfor %}
-        {% endcomment %}

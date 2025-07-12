@@ -32,19 +32,35 @@
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-body flex flex-col min-h-screen">
   <!-- Theme Toggle -->
-  <button id="theme-toggle" class="fixed bottom-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 z-50">
+  <button id="theme-toggle" class="fixed bottom-4 right-4 p-2 hidden rounded-full bg-gray-200 dark:bg-gray-700 z-50">
     <i id="theme-icon"class="fas fa-moon dark:fa-sun"></i>
   </button>
 
-  <!-- Site Name -->
-  <header class="text-center py-1">
+  <!-- Site Name (Desktop Only) -->
+  <header class="text-center py-4 hidden md:block">
     <a href="{% url 'home' %}">
-      <img src="{% static 'images/wimer_logo.png' %}" alt="Wimer Logo" class="mx-auto w-48 h-48 dark:invert dark:brightness-0">
+      <img 
+        src="{% static 'images/wimer_logo.png' %}" 
+        alt="Wimer Logo" 
+        style="max-width: 300px; height: auto; display: inline-block;"
+      >
     </a>
   </header>
 
+
   <!-- Navbar -->
-  <nav class="bg-white dark:bg-gray-900 bg-opacity-90 dark:bg-opacity-90 shadow sticky top-0 z-30">
+  <nav class="bg-white dark:bg-gray-900 bg-opacity-90 dark:bg-opacity-90 shadow sticky top-0 z-30 relative">
+    <!-- Mobile Logo (Centered) -->
+    <div class="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+      <a href="{% url 'home' %}">
+        <img 
+          src="{% static 'images/wimer_logo.png' %}" 
+          alt="Wimer Logo" 
+          class="h-40 w-auto"
+        >
+      </a>
+    </div>
+    
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
       <!-- Left Side: Hamburger (Mobile) & Search (Desktop) -->
       <div class="flex items-center space-x-4">
@@ -69,7 +85,7 @@
             {% endfor %}
           </ul>
         </li>
-        <li><a href="" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Gallery</a></li>
+        <li><a href="{% url 'gallery' %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Gallery</a></li>
         <li><a href="{% url 'info' %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">About</a></li>
         <li><a href="{% url 'events'%}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Events</a></li>
       </ul>
@@ -96,10 +112,10 @@
           <ul class="absolute hidden group-hover:block bg-white dark:bg-gray-900 shadow-lg rounded overflow-hidden right-0 w-40">
             {% if request.user.is_authenticated %}
               <li class="border-b border-gray-200 dark:border-gray-700">
-                <a href="{% url 'update_detail' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Settings</a>
+                <a href="{% url 'update_detail' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Update Details</a>
               </li>
               <li class="border-b border-gray-200 dark:border-gray-700">
-                <a href="{% url 'order-history' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">History</a>
+                <a href="{% url 'order-history' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Order History</a>
               </li>
               <li>
                 <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Logout</a>
@@ -126,7 +142,7 @@
     <div class="p-4 overflow-y-auto h-[calc(100vh-65px)]">
       <ul class="space-y-4">
         <li><a href="{% url 'shop' %}" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Shop</a></li>
-        <li><a href="" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Gallery</a></li>
+        <li><a href="{% url 'gallery' %}" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Gallery</a></li>
         <li><a href="{% url 'info' %}" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">About</a></li>
         <li><a href="{% url 'events'%}" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Events</a></li>
       </ul>
@@ -134,8 +150,8 @@
       <h3 class="font-heading text-xl font-bold mb-4 uppercase">Account</h3>
       <ul class="space-y-4 font-body">
         {% if request.user.is_authenticated %}
-          <li><a href="{% url 'update_detail' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-cog fa-fw w-5"></i><span>Settings</span></a></li>
-          <li><a href="{% url 'order-history' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-history fa-fw w-5"></i><span>History</span></a></li>
+          <li><a href="{% url 'update_detail' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-cog fa-fw w-5"></i><span>Update Details</span></a></li>
+          <li><a href="{% url 'order-history' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-history fa-fw w-5"></i><span>Order History</span></a></li>
           <li><a href="{% url 'logout' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-sign-out-alt fa-fw w-5"></i><span>Logout</span></a></li>
         {% else %}
           <li><a href="{% url 'login' %}" class="flex items-center space-x-3 hover:text-accent dark:hover:text-accent"><i class="fas fa-sign-in-alt fa-fw w-5"></i><span>Login</span></a></li>

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lookbook{% endblock %}
+
+{% block content %}
+
+
+<section class="py-12">
+  <!-- Section Header -->
+  <div class="text-center mb-12">
+    <h2 class="text-4xl lg:text-5xl font-bold font-heading mb-4">Wimer Gallery</h2>
+    <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
+      Explore our latest lookbooks, photoshoots and campaign visuals showcasing Wimer in action.
+    </p>
+  </div>
+
+  <!-- Quilted Gallery Grid -->
+  <div class="grid grid-cols-2 md:grid-cols-4 auto-rows-[250px] gap-4">
+    {% for image in gallery_images %}
+      <div class="group gallery-item rounded-lg shadow-lg overflow-hidden relative cursor-pointer
+        {% if forloop.counter0|divisibleby:5 %} 
+          col-span-2 row-span-2 <!-- Make every 5th item a large square -->
+        {% elif forloop.counter0|divisibleby:3 %}
+          row-span-2 <!-- Make every 3rd item a vertical rectangle -->
+        {% endif %}">
+
+        <!-- The Image -->
+        <img src="{{ image.url.url }}" alt="{{ image.caption|title|default:'Wimer Lookbook' }}" 
+             class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out">
+        
+        <!-- Hover Overlay -->
+        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex flex-col items-center justify-center p-4">
+          <div class="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+            <i class="fas fa-search-plus text-white text-3xl mb-2"></i>
+            <p class="text-white font-body text-center font-semibold">{{ image.caption|title|default:'Styled by Wimer' }}</p>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <!-- Placeholder Content: Clean, DRY, and dynamic -->
+      {% for i in "12345678" %}
+        <div class="group gallery-item rounded-lg shadow-lg overflow-hidden relative cursor-pointer
+          {% if forloop.counter0|divisibleby:5 %} col-span-2 row-span-2
+          {% elif forloop.counter0|divisibleby:3 %} row-span-2
+          {% endif %}">
+          
+          <img src="https://source.unsplash.com/random/800x600?streetwear,model&sig={{ forloop.counter }}" 
+               alt="Wimer Lookbook Placeholder {{ i }}"
+               class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out">
+               
+          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex flex-col items-center justify-center p-4">
+            <div class="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+              <i class="fas fa-search-plus text-white text-3xl mb-2"></i>
+              <p class="text-white font-body text-center font-semibold">Styled by Wimer</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Lightbox Modal -->
+<div id="lightbox-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[999] hidden transition-opacity duration-300">
+  <button id="lightbox-close" class="absolute top-4 right-4 text-white text-4xl hover:text-accent">×</button>
+  <img id="lightbox-image" src="" alt="Full-screen gallery image" class="max-w-full max-h-full object-contain rounded-lg">
+</div>
+
+<!-- JavaScript for Lightbox -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('lightbox-modal');
+  const modalImg = document.getElementById('lightbox-image');
+  const closeBtn = document.getElementById('lightbox-close');
+  const galleryItems = document.querySelectorAll('.gallery-item');
+
+  galleryItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const imgSrc = item.querySelector('img').src;
+      modalImg.src = imgSrc;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    });
+  });
+
+  const closeModal = () => {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    modalImg.src = ''; // Clear src to stop loading
+  };
+
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    // Close modal if the background is clicked, but not the image itself
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+      closeModal();
+    }
+  });
+});
+</script>
+
+{% endblock %}

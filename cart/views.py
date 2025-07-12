@@ -47,7 +47,7 @@ def addToCart(request, variant_id):
             total_price=total_price,
             variant=variant,
         )
-        messages.info(request, "Added to cart")
+        messages.info(request, f"{quantity} {variant.product.name.title()}{'s' if int(quantity) > 1 else ''} added to cart.")
 
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
