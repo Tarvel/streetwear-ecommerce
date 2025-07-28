@@ -95,6 +95,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 ACCOUNT_ADAPTER = "accounts.adapters.EmailAsUsernameAdapter"
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter'
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`

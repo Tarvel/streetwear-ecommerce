@@ -68,7 +68,6 @@
                           max="{{ item.variant.stock_quantity }}"
                           class="w-16 px-3 py-1 border-none bg-transparent font-body text-center focus:outline-none focus:ring-2 focus:ring-accent appearance-none"
                           style="-webkit-appearance: none; -moz-appearance: textfield;"
-                          onchange="submitAjaxCartForm(this.form)"
                           required>
                     <button type="button" onclick="incrementCartQuantity('quantity-{{ item.id }}')"  class="px-2 py-1 text-gray-700 bg-gray-200 dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition">+</button>
                   </div>

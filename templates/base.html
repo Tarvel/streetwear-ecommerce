@@ -25,120 +25,100 @@
       },
     }
   </script>
-  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;600&display=swap">
-  <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .logo {
+        font-family: 'Inter', sans-serif;
+        font-weight: 800;
+        font-size: 2.5rem;
+        letter-spacing: -4px;
+    }
+    header {
+      transition: transform 0.3s ease-in-out;
+    }
+    /* MODIFIED: Renamed class to avoid conflict with Tailwind's 'hidden' class */
+    header.navbar-hidden {
+      transform: translateY(-100%);
+    }
+  </style>
 </head>
-<body class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-body flex flex-col min-h-screen">
-  <!-- Theme Toggle -->
+<body class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-sans flex flex-col min-h-screen">
   <button id="theme-toggle" class="fixed bottom-4 right-4 p-2 hidden rounded-full bg-gray-200 dark:bg-gray-700 z-50">
-    <i id="theme-icon"class="fas fa-moon dark:fa-sun"></i>
+    <i id="theme-icon" class="fas fa-moon dark:fa-sun"></i>
   </button>
 
-  <!-- Site Name (Desktop Only) -->
-  <header class="text-center py-4 hidden md:block">
-    <a href="{% url 'home' %}">
-      <img 
-        src="{% static 'images/wimer_logo.png' %}" 
-        alt="Wimer Logo" 
-        style="max-width: 300px; height: auto; display: inline-block;"
-      >
-    </a>
+  <!-- MODIFIED: Header is now sticky, full-width, with a background and shadow. Content is wrapped in a container. -->
+  <header id="navbar" class="sticky top-0 z-30 bg-white dark:bg-gray-800">
+    <div class="container mx-auto px-4 py-6">
+      <div class="flex justify-between items-center">
+          <div class="flex items-center">
+              <button id="search-toggle-desktop" class="text-xl hidden md:block hover:text-accent"><i class="fas fa-search"></i></button>
+              <button id="menu-toggle" class="text-xl md:hidden hover:text-accent">
+                  <i class="fas fa-bars"></i>
+              </button>
+          </div>
+          <a href="{% url 'home' %}" class="logo text-black dark:text-white">WIMER</a>
+          <div class="flex items-center space-x-4">
+              <button id="search-toggle-mobile" class="text-xl md:hidden hover:text-accent"><i class="fas fa-search"></i></button>
+              {% if request.user.is_authenticated %}
+                  <div class="relative">
+                  <a href="{% url 'cart' %}" class="hover:text-accent">
+                    <svg class="h-7 w-7 text-black hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                  </a>
+                  {% if cart_item_count > 0 %}
+                      <a href="{% url 'cart' %}"> <span class="absolute -top-2 -right-2 bg-accent text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{{ cart_item_count }}</span></a>
+                  {% endif %}
+                  </div>
+              {% endif %}
+              <div class="relative hidden md:block">
+                  <button id="user-btn" class="text-xl hover:text-accent"><i class="fas fa-user"></i></button>
+                  <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-20">
+                      {% if request.user.is_authenticated %}
+                          <a href="{% url 'update_detail' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Update Details</a>
+                          <a href="{% url 'order-history' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Order History</a>
+                          <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Logout</a>
+                      {% else %}
+                          <a href="{% url 'login' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Login</a>
+                      {% endif %}
+                  </div>
+              </div>
+          </div>
+      </div>
+      <nav class="hidden md:flex justify-center items-center space-x-8 mt-4 uppercase text-sm font-medium">
+          <div class="relative">
+              <button id="shop-btn" class="flex items-center space-x-1 hover:text-accent">
+                  <span>SHOP</span>
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              <div id="shop-dropdown" class="hidden absolute left-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-20">
+                <a href="{% url 'shop' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">All</a>
+                  {% for drop in drops %}
+                      <a href="{% url 'shop_drop' drop %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{{ drop }}</a>
+                  {% endfor %}
+              </div>
+          </div>
+          <a href="{% url 'gallery' %}" class="hover:text-accent">Gallery</a>
+          <a href="{% url 'info' %}" class="hover:text-accent">About</a>
+          <a href="{% url 'events'%}" class="hover:text-accent">Events</a>
+      </nav>
+    </div>
   </header>
 
+  <main class="container mx-auto px-4 py-8 flex-grow">
+    {% block content %}
+    {% endblock %}
+  </main>
 
-  <!-- Navbar -->
-  <nav class="bg-white dark:bg-gray-900 bg-opacity-90 dark:bg-opacity-90 shadow sticky top-0 z-30 relative">
-    <!-- Mobile Logo (Centered) -->
-    <div class="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-      <a href="{% url 'home' %}">
-        <img 
-          src="{% static 'images/wimer_logo.png' %}" 
-          alt="Wimer Logo" 
-          class="h-40 w-auto"
-        >
-      </a>
-    </div>
-    
-    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-      <!-- Left Side: Hamburger (Mobile) & Search (Desktop) -->
-      <div class="flex items-center space-x-4">
-        <!-- Hamburger Menu Button -->
-        <button id="menu-toggle" class="text-xl md:hidden hover:text-accent dark:hover:text-accent">
-          <i class="fas fa-bars"></i>
-        </button>
-        <!-- Search Icon (visible on desktop) -->
-        <button id="search-toggle-desktop" class="text-xl hidden md:block hover:text-accent dark:hover:text-accent"><i class="fas fa-search"></i></button>
-      </div>
-
-      <!-- Center Menu Items (Desktop) -->
-      <ul class="hidden md:flex space-x-8 justify-center flex-1">
-        <li class="relative group">
-          <a href="{% url 'shop' %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Shop</a>
-          <!-- Dropdown -->
-          <ul class="absolute hidden group-hover:block bg-white dark:bg-gray-900 shadow-lg rounded overflow-hidden w-48">
-            {% for drop in drops %}
-            <li class="{% if not forloop.last %}border-b border-gray-200 dark:border-gray-700{% endif %}">
-              <a href="{% url 'shop_drop' drop %}" class="block px-4 py-2 hover:bg-gray-300 dark:hover:bg-gray-700 uppercase font-bold font-heading text-lg shadow">{{ drop }}</a>
-            </li>
-            {% endfor %}
-          </ul>
-        </li>
-        <li><a href="{% url 'gallery' %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Gallery</a></li>
-        <li><a href="{% url 'info' %}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">About</a></li>
-        <li><a href="{% url 'events'%}" class="uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Events</a></li>
-      </ul>
-
-      <!-- Right Side Icons -->
-      <div class="flex items-center space-x-4 md:space-x-6">
-        <!-- parent div for search button was missing in original code, added for proper spacing -->
-        <div>
-          <!-- Search Icon (Mobile) -->
-          <button id="search-toggle-mobile" class="text-xl md:hidden hover:text-accent dark:hover:text-accent"><i class="fas fa-search"></i></button>
-        </div>
-        <!-- Cart Icon with Indicator -->
-        {% if request.user.is_authenticated %}
-        <div class="relative">
-          <a href="{% url 'cart' %}" class="hover:text-accent dark:hover:text-accent"><i class="fas fa-shopping-cart text-xl"></i></a>
-          {% if cart_item_count > 0 %}
-            <a href="{% url 'cart' %}"> <span class="absolute -top-2 -right-2 bg-accent text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{{ cart_item_count }}</span></a>
-          {% endif %}
-        </div>
-        {% endif %}
-        <!-- User Icon with Dropdown (Desktop) -->
-        <div class="relative group hidden md:block">
-          <button class="text-xl hover:text-accent dark:hover:text-accent"><i class="fas fa-user"></i></button>
-          <ul class="absolute hidden group-hover:block bg-white dark:bg-gray-900 shadow-lg rounded overflow-hidden right-0 w-40">
-            {% if request.user.is_authenticated %}
-              <li class="border-b border-gray-200 dark:border-gray-700">
-                <a href="{% url 'update_detail' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Update Details</a>
-              </li>
-              <li class="border-b border-gray-200 dark:border-gray-700">
-                <a href="{% url 'order-history' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Order History</a>
-              </li>
-              <li>
-                <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Logout</a>
-              </li>
-            {% else %}
-              <li>
-                <a href="{% url 'login' %}" class="block px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 uppercase font-bold font-heading text-sm">Login</a>
-              </li>
-            {% endif %}
-          </ul>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Mobile Sidebar Menu -->
   <div id="mobile-menu" class="fixed top-0 left-0 w-3/4 max-w-sm h-full bg-white dark:bg-gray-900 shadow-lg z-50 transform -translate-x-full transition-transform duration-300 ease-in-out">
-    <!-- Sidebar Header -->
     <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
       <h2 class="font-heading text-2xl font-bold">Menu</h2>
       <button id="close-menu" class="text-2xl hover:text-accent dark:hover:text-accent"><i class="fas fa-times"></i></button>
     </div>
-    <!-- Sidebar Links -->
     <div class="p-4 overflow-y-auto h-[calc(100vh-65px)]">
       <ul class="space-y-4">
         <li><a href="{% url 'shop' %}" class="block py-2 uppercase font-bold font-heading text-lg hover:text-accent dark:hover:text-accent">Shop</a></li>
@@ -159,10 +139,8 @@
       </ul>
     </div>
   </div>
-  <!-- Overlay for Mobile Menu -->
   <div id="mobile-menu-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 
-  <!-- Search Modal -->
   <div id="search-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-20 z-50 hidden">
     <div class="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4">
       <div class="flex justify-between items-center mb-4">
@@ -180,100 +158,117 @@
     </div>
   </div>
 
-  <!-- Flash Messages -->
-{% if messages %}
+  {% if messages %}
   <div id="flash-messages" class="fixed top-4 inset-x-4 md:inset-x-auto md:right-4 z-50 space-y-3 md:max-w-sm">
     {% for message in messages %}
-      <div class="flash-message relative flex items-center p-4 pr-12 rounded-lg shadow-xl text-white 
-                  opacity-0 -translate-y-12 md:translate-y-0 md:translate-x-full 
-                  transition-all duration-500 ease-in-out
-        {% if message.tags == 'error' %}
-          bg-red-500 border-l-4 border-red-700
-        {% else %}
-          bg-slate-800 border-l-4 border-green-500
-        {% endif %}">
-        <!-- Icon -->
+      <div class="flash-message relative flex items-center p-4 pr-12 rounded-lg shadow-xl text-white opacity-0 -translate-y-12 md:translate-y-0 md:translate-x-full transition-all duration-500 ease-in-out {% if message.tags == 'error' %} bg-red-500 border-l-4 border-red-700 {% else %} bg-slate-800 border-l-4 border-green-500 {% endif %}">
         <div class="mr-3">
           {% if message.tags == 'error' %}
-            <!-- Heroicon: x-circle -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-              <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" />
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" /></svg>
           {% else %}
-            <!-- Heroicon: check-circle -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-              <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" /></svg>
           {% endif %}
         </div>
-        <!-- Message Text -->
         <span class="flex-grow text-sm font-medium">{{ message }}</span>
-        <!-- Close Button -->
         <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 p-1 rounded-full text-white/70 hover:text-white hover:bg-black/20 transition-colors">
-          <!-- Heroicon: x-mark -->
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
       </div>
     {% endfor %}
   </div>
-{% endif %}
+  {% endif %}
 
-  <!-- Main Content -->
-  <main class="container mx-auto px-4 py-8 flex-grow">
-    {% block content %}
-    {% endblock %}
-  </main>
+  <footer class="bg-gray-100 dark:bg-gray-900 py-6 md:py-12 mt-auto">
+  <div class="container mx-auto px-4">
+    <!-- Grid layout for desktop, vertical stack for mobile -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center md:text-left">
 
-  <!-- Footer -->
-  <footer class="bg-gray-100 dark:bg-gray-900 py-8 md:py-12">
-    <div class="container mx-auto px-4">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-        <!-- Brand Info -->
-        <div>
-          <h3 class="text-lg md:text-xl font-bold font-heading mb-4">Wimer</h3>
-          <p class="text-gray-600 dark:text-gray-300 font-body text-sm md:text-base">
-            Streetwear that defines your vibe. Join the crew and stay ahead of the game.
-          </p>
-        </div>
-        <!-- Navigation Links -->
-        <div>
-          <h3 class="text-lg md:text-xl font-bold font-heading mb-4">Explore</h3>
-          <ul class="space-y-2 font-body text-sm md:text-base">
+      <!-- Brand / About Section -->
+      <div>
+        <h3 class="text-lg font-bold font-heading mb-2">Wimer</h3>
+        <p class="text-gray-600 dark:text-gray-300 font-body text-sm">
+          Streetwear that defines your vibe. Join the crew and stay ahead of the game.
+        </p>
+      </div>
+
+      <!-- Explore Section (Collapsible on mobile) -->
+      <div>
+        <details class="block md:hidden mb-2">
+          <summary class="font-heading font-bold text-lg cursor-pointer">Explore</summary>
+          <ul class="space-y-2 mt-2 font-body text-sm">
+            <li><a href="{% url 'shop' %}" class="hover:text-accent dark:hover:text-accent">Shop</a></li>
+            <li><a href="{% url 'contact' %}" class="hover:text-accent dark:hover:text-accent">Contact Us</a></li>
+            <li><a href="{% url 'info'%}" class="hover:text-accent dark:hover:text-accent">About</a></li>
+            <li><a href="{% url 'events'%}" class="hover:text-accent dark:hover:text-accent">Events</a></li>
+          </ul>
+        </details>
+
+        <div class="hidden md:block">
+          <h3 class="text-lg font-bold font-heading mb-2">Explore</h3>
+          <ul class="space-y-2 font-body text-sm">
             <li><a href="{% url 'shop' %}" class="hover:text-accent dark:hover:text-accent">Shop</a></li>
             <li><a href="{% url 'contact' %}" class="hover:text-accent dark:hover:text-accent">Contact Us</a></li>
             <li><a href="{% url 'info'%}" class="hover:text-accent dark:hover:text-accent">About</a></li>
             <li><a href="{% url 'events'%}" class="hover:text-accent dark:hover:text-accent">Events</a></li>
           </ul>
         </div>
-        <!-- Social Media Links -->
-        <div>
-          <h3 class="text-lg md:text-xl font-bold font-heading mb-4">Connect</h3>
-          <div class="flex justify-center md:justify-start space-x-4">
-            <a href="https://instagram.com" target="_blank" class="relative group">
-              <i class="fab fa-instagram text-2xl text-gray-600 dark:text-gray-300 hover:text-white bg-gray-200 dark:bg-gray-700 rounded-full p-2 hover:bg-accent dark:hover:bg-accent transition"></i>
-              <span class="absolute bottom-full mb-2 hidden group-hover:block text-xs bg-black text-white rounded px-2 py-1">Instagram</span>
+      </div>
+
+      <!-- Social / Connect Section -->
+      <div>
+        <h3 class="text-lg font-bold font-heading mb-2">Connect</h3>
+        <div class="flex justify-center md:justify-start space-x-3 text-xl md:text-2xl">
+          <!-- Instagram -->
+          <a href="https://instagram.com" target="_blank" class="relative group">
+            <i class="fab fa-instagram text-gray-600 dark:text-gray-300 hover:text-white bg-gray-200 dark:bg-gray-700 rounded-full p-1.5 hover:bg-accent dark:hover:bg-accent transition"></i>
             </a>
-            <a href="https://facebook.com" target="_blank" class="relative group">
-              <i class="fab fa-facebook text-2xl text-gray-600 dark:text-gray-300 hover:text-white bg-gray-200 dark:bg-gray-700 rounded-full p-2 hover:bg-accent dark:hover:bg-accent transition"></i>
-              <span class="absolute bottom-full mb-2 hidden group-hover:block text-xs bg-black text-white rounded px-2 py-1">Facebook</span>
-            </a>
-            <a href="https://twitter.com" target="_blank" class="relative group">
-              <i class="fab fa-twitter text-2xl text-gray-600 dark:text-gray-300 hover:text-white bg-gray-200 dark:bg-gray-700 rounded-full p-2 hover:bg-accent dark:hover:bg-accent transition"></i>
-              <span class="absolute bottom-full mb-2 hidden group-hover:block text-xs bg-black text-white rounded px-2 py-1">Twitter</span>
-            </a>
-          </div>
+          <!-- Facebook -->
+          <a href="https://facebook.com" target="_blank" class="relative group">
+            <i class="fab fa-facebook text-gray-600 dark:text-gray-300 hover:text-white bg-gray-200 dark:bg-gray-700 rounded-full p-1.5 hover:bg-accent dark:hover:bg-accent transition"></i>
+             </a>
+          <!-- Twitter -->
+          <a href="https://twitter.com" target="_blank" class="relative group">
+            <i class="fab fa-twitter text-gray-600 dark:text-gray-300 hover:text-white bg-gray-200 dark:bg-gray-700 rounded-full p-1.5 hover:bg-accent dark:hover:bg-accent transition"></i>
+
+          </a>
         </div>
       </div>
-      <!-- Copyright -->
-      <div class="mt-8 md:mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400 font-body">
-        © {% now "Y" %} Wimer. All rights reserved.
-      </div>
     </div>
-  </footer>
 
-  <!-- Load External JavaScript -->
+    <!-- Bottom Copyright -->
+    <div class="mt-6 md:mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 text-center text-xs md:text-sm text-gray-500 dark:text-gray-400 font-body">
+      © {% now "Y" %} Wimer. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+
   <script src="{% static 'js/script.js' %}"></script>
+
+  <!-- ADDED: Script for navbar hide/show on scroll -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const navbar = document.getElementById('navbar');
+      if (!navbar) return;
+
+      let lastScrollY = window.scrollY;
+      const navbarHeight = navbar.offsetHeight;
+
+      window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+
+        // If scrolling down and we're past the navbar, hide it.
+        if (currentScrollY > lastScrollY && currentScrollY > navbarHeight) {
+          navbar.classList.add('navbar-hidden');
+        } else {
+          // If scrolling up or we are at the top of the page, show it.
+          navbar.classList.remove('navbar-hidden');
+        }
+        
+        // Update last scroll position for the next event
+        lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
+      });
+    });
+  </script>
 </body>
 </html>

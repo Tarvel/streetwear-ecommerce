@@ -47,7 +47,10 @@ def addToCart(request, variant_id):
             total_price=total_price,
             variant=variant,
         )
-        messages.info(request, f"{quantity} {variant.product.name.title()}{'s' if int(quantity) > 1 else ''} added to cart.")
+        messages.info(
+            request,
+            f"{quantity} {variant.product.name.title()}{'s' if int(quantity) > 1 else ''} added to cart.",
+        )
 
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -87,13 +90,24 @@ def updateCart(request, variant_id):
     except ProductVariant.DoesNotExist:
         return JsonResponse({"error": "Product does not exist."}, status=404)
 
-    cart = Cart.objects.filter(user=request.user, variant__id=variant_id)
+    try:
+        cart = Cart.objects.get(user=request.user, variant__id=variant_id)
+    except Cart.DoesNotExist:
+        return JsonResponse({"error": "Cart item does not exist."}, status=404)
 
     if request.method == "POST":
         quantity = request.POST.get("quantity", 1)
-        new_total_price = int(variant.price) * int(quantity)
-        cart.update(quantity=quantity, total_price=new_total_price)
-        msg = f"Updated: {quantity} {variant.product.name.title()}{'s' if int(quantity) > 1 else ''} in cart."
+        try:
+            quantity = int(quantity)
+            if quantity < 1 or quantity > variant.stock_quantity:
+                return JsonResponse({"error": "Invalid quantity."}, status=400)
+            new_total_price = int(variant.price) * quantity
+            cart.quantity = quantity
+            cart.total_price = new_total_price
+            cart.save()
+            msg = f"Updated: {quantity} {variant.product.name.title()}{'s' if quantity > 1 else ''} in cart."
+        except ValueError:
+            return JsonResponse({"error": "Invalid quantity value."}, status=400)
 
         cart_items = Cart.objects.filter(user=request.user)
         cart_subtotal = sum(item.total_price for item in cart_items)
@@ -107,12 +121,20 @@ def updateCart(request, variant_id):
             request=request,
         )
 
-        return JsonResponse(
-            {
-                "html": html,
-                "message": msg,
-            }
-        )
+        if (
+            request.headers.get("HX-Request")
+            or request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
+        ):
+            return JsonResponse(
+                {
+                    "html": html,
+                    "message": msg,
+                }
+            )
+            # Return just the grid HTML
+
+        else:
+            return redirect("cart")
 
     return JsonResponse({"error": "Invalid request."}, status=400)
 
@@ -191,7 +213,7 @@ def checkoutPage(request):
         callback_url = f"{request.scheme}://{request.get_host()}{payment_success_url}"
 
         checkout_data = {
-            "email": user.email,
+            "email": user.email or user.username,
             "amount": int(order.total_amount * 100),  # convert to kobo
             "currency": "NGN",
             "channels": ["card", "bank_transfer", "bank", "ussd", "qr", "mobile_money"],

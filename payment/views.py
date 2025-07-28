@@ -24,15 +24,17 @@ def paymentSuccessful(request, order_id):
     else:
         return redirect("login")
     order = Order.objects.get(order_id=order_id)
-    payment = Payment.objects.get(order__order_id=order_id)
-
     order.status = "paid"
     order.updated_at = timezone.now()
     order.save()
-
-    payment.status = "success"
-    payment.paid_at = timezone.now()
-    payment.save()
+    try:
+        payment = Payment.objects.get(order__order_id=order_id)
+        payment.status = "success"
+        payment.paid_at = timezone.now()
+        payment.save()
+    except Payment.DoesNotExist:
+        payment = None
+        messages.info(request, "Payment pending")
 
     context = {
         "order": order,
@@ -66,7 +68,7 @@ def paymentRetry(request, order_id):
     callback_url = f"{request.scheme}://{request.get_host()}{payment_success_url}"
 
     checkout_data = {
-        "email": user.email,
+        "email": user.email or user.username,
         "amount": int(order.total_amount * 100),  # convert to kobo
         "currency": "NGN",
         "channels": ["card", "bank_transfer", "bank", "ussd", "qr", "mobile_money"],
@@ -95,6 +97,7 @@ def paymentRetry(request, order_id):
         return redirect(checkout_url)
 
     else:
+        print(payment_reference)
         order.status = "failed"
         order.updated_at = timezone.now()
         order.save()
@@ -109,6 +112,7 @@ def paymentRetry(request, order_id):
 
 @csrf_exempt
 def paystack_webhook(request):
+    print("testing webok")
     secret = settings.PAYSTACK_SECRET_KEY
     request_body = request.body
 
@@ -116,7 +120,7 @@ def paystack_webhook(request):
 
     if hash == request.META.get("HTTP_X_PAYSTACK_SIGNATURE"):
         webhook_post_data = json.loads(request_body)
-        print(webhook_post_data)
+        print(f'This is data: {webhook_post_data}')
 
         if webhook_post_data["event"] == "charge.success":
             metadata = webhook_post_data["data"]["metadata"]

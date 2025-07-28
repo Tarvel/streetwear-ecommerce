@@ -1,4 +1,3 @@
-// Quantity Increment/Decrement for Product Detail Page
 function incrementQuantity(inputId) {
   const input = document.getElementById(inputId);
   const max = parseInt(input.max);
@@ -21,14 +20,11 @@ function showToast(message) {
   const toast = document.getElementById("toast-message");
   toast.innerText = message;
   toast.classList.remove("hidden");
-
-  // Auto-hide after 3 seconds
   setTimeout(() => {
     toast.classList.add("hidden");
   }, 3000);
 }
 
-// Thumbnail Selection for Product Detail Page
 function setActiveThumbnail(thumbnail) {
   const thumbnails = document.querySelectorAll('.cursor-pointer');
   thumbnails.forEach(img => img.classList.remove('ring-2', 'ring-accent', 'opacity-100'));
@@ -36,7 +32,6 @@ function setActiveThumbnail(thumbnail) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Flash Messages Animation
   const flashMessages = document.querySelectorAll('.flash-message');
   flashMessages.forEach((msg, index) => {
     setTimeout(() => {
@@ -50,20 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000 + (index * 200));
   });
 
-  // Theme Toggle
   const themeToggle = document.getElementById('theme-toggle');
   const themeIcon = document.getElementById('theme-icon');
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
   themeToggle.addEventListener('click', () => {
-    // Toggle theme
     document.documentElement.classList.toggle('dark');
-
-    // Toggle icon
     themeIcon.classList.toggle('fa-moon');
     themeIcon.classList.toggle('fa-sun');
-
-    // Send theme to server
     fetch('/set-theme/', {
       method: 'POST',
       headers: {
@@ -76,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Search Modal Logic
   const searchModal = document.getElementById('search-modal');
   const closeModal = document.getElementById('close-modal');
   const searchToggleDesktop = document.getElementById('search-toggle-desktop');
@@ -101,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Mobile Menu Logic
   const menuToggle = document.getElementById('menu-toggle');
   const closeMenu = document.getElementById('close-menu');
   const mobileMenu = document.getElementById('mobile-menu');
@@ -123,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
   closeMenu.addEventListener('click', hideMobileMenu);
   menuOverlay.addEventListener('click', hideMobileMenu);
 
-  // Slideshow Logic
   const container = document.getElementById('slideshow-container');
   if (container) {
     const slides = Array.from(container.querySelectorAll('.slide'));
@@ -227,5 +213,35 @@ document.addEventListener('DOMContentLoaded', () => {
     animateText(slides[0], true);
     startInterval();
   }
-});
 
+  const setupDropdown = (buttonId, dropdownId) => {
+    const button = document.getElementById(buttonId);
+    const dropdown = document.getElementById(dropdownId);
+
+    if (button && dropdown) {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        document.querySelectorAll('.absolute.z-20').forEach(menu => {
+            if (menu.id !== dropdownId) {
+               menu.classList.add('hidden');
+            }
+        });
+        dropdown.classList.toggle('hidden');
+      });
+    }
+  };
+
+  setupDropdown('shop-btn', 'shop-dropdown');
+  setupDropdown('availability-btn', 'availability-dropdown');
+  setupDropdown('price-btn', 'price-dropdown');
+  setupDropdown('sort-btn', 'sort-dropdown');
+  setupDropdown('user-btn', 'user-dropdown');
+
+  window.addEventListener('click', () => {
+    document.querySelectorAll('.absolute.z-20').forEach(menu => {
+      if (!menu.classList.contains('hidden')) {
+        menu.classList.add('hidden');
+      }
+    });
+  });
+});

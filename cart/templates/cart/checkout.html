@@ -49,7 +49,7 @@
                 <strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}
               </p>
               <p class="text-gray-600 dark:text-gray-300 font-body mb-2">
-                <strong>Email:</strong> {{ user.email }}
+                <strong>Email:</strong> {{ user.email|default:user.username }}
               </p>
               <p class="text-gray-600 dark:text-gray-300 font-body mb-2">
                 <strong>Phone Number:</strong> {{ user.userdetail.phone_number|default:"Not provided" }}
@@ -66,17 +66,20 @@
             <a href="{% url 'update_detail' %}" class="block text-accent hover:underline font-body">Update Details</a>
           {% endif %}
           <!-- Payment Section -->
-          {% if user.is_authenticated and user.userdetail and cart_items %}
+          {% if user.is_authenticated and user.userdetail.delivery_address and user.userdetail.phone_number and cart_items %}
             <form method="post" action="{% url 'checkout' %}" class="space-y-6">
               {% csrf_token %}
               <div>
                 <h4 class="text-lg font-semibold font-heading mb-2">Payment Information</h4>
                 <p class="text-gray-600 dark:text-gray-300 font-body mb-4">Proceed to our secure payment gateway.</p>
-                <input type="text" value="">
                 <button type="submit" class="w-full bg-gray-800 hover:bg-accent dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md dark:hover:bg-accent transition" aria-label="Place your order">Place Order</button>
               </div>
             </form>
-          {% endif %}
+            {% else %}
+            <a href="{% url 'update_detail' %}">
+            <button type="submit" class="w-full bg-gray-800 hover:bg-accent dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md dark:hover:bg-accent transition" aria-label="Place your order">Update Details to Place Order</button>
+            </a>
+            {% endif %}
         </div>
       </div>
     </div>

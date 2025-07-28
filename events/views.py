@@ -4,6 +4,7 @@ from django.utils import timezone
 
 
 def events(request):
+    print(request.user.username)
     upcoming_events = Event.objects.filter(date__gt=timezone.now())
     past_events = Event.objects.filter(date__lt=timezone.now())
 
