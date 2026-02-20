@@ -1,0 +1,154 @@
+{% load humanize %}
+
+<!-- Header -->
+<div class="mb-8 border-b border-gray-100 dark:border-gray-800 pb-8">
+  <div class="flex items-center gap-2 mb-4">
+    <span
+      class="text-[10px] font-black uppercase tracking-[0.2em] bg-black text-white px-2 py-1 rounded-sm"
+    >
+      {{ product.drop.name|default:"Main Collection" }}
+    </span>
+    {% if not selected_variant.availability or selected_variant.stock_quantity == 0 %}
+    <span
+      class="text-[10px] font-black uppercase tracking-[0.2em] border border-red-500 text-red-500 px-2 py-1 rounded-sm"
+    >
+      Sold Out
+    </span>
+    {% endif %}
+  </div>
+
+  <h1
+    class="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none mb-4"
+  >
+    {{ product.name }}
+  </h1>
+
+  <p class="text-2xl font-black tracking-tighter text-accent">
+    ₦{{ selected_variant.price|intcomma|default:product.base_price|intcomma }}
+  </p>
+</div>
+
+<!-- Description -->
+<div class="mb-10">
+  <h3
+    class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3"
+  >
+    Product Description
+  </h3>
+  <p
+    class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed tracking-tight"
+  >
+    {{ product.description|default:"Minimalist streetwear essential with focus on durability and clean lines." }}
+  </p>
+</div>
+
+<!-- Variant Selection -->
+<div class="mb-10">
+  <h3
+    class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4"
+  >
+    Select Option
+  </h3>
+  <div class="flex flex-wrap gap-2">
+    {% for variant in variants %}
+    <a
+      href="?variant={{ variant.id }}"
+      hx-get="?variant={{ variant.id }}"
+      hx-target="#product-info-container"
+      hx-push-url="true"
+      class="px-5 py-3 text-xs font-bold uppercase tracking-widest border transition-all {% if selected_variant.id == variant.id %} bg-black text-white border-black dark:bg-white dark:text-black dark:border-white {% else %} border-gray-200 dark:border-gray-800 text-gray-400 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white {% endif %}"
+    >
+      {% if variant.size != "NA" %}{{ variant.size }}{% endif %} {% if variant.size != "NA" and variant.colour %} - {% endif %} {% if variant.colour %}{{ variant.colour }}{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Actions -->
+<div class="mt-auto pt-8">
+  {% if selected_variant.availability and selected_variant.stock_quantity > 0 %}
+  {% if request.user.is_authenticated %}
+  <form
+    action="{% if cart.quantity > 0 %}{% url 'update_cart_shop' selected_variant.id %}{% else %}{% url 'add_to_cart' selected_variant.id %}{% endif %}"
+    method="post"
+    class="space-y-6"
+  >
+    {% csrf_token %}
+
+    <div class="flex items-center gap-4">
+      <!-- Stripped Down Quantity Selector -->
+      <div
+        class="flex items-center border border-gray-100 dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-800/50 p-1"
+      >
+        <button
+          type="button"
+          onclick="decrementQuantity('quantity-input')"
+          class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+        >
+          <i class="fas fa-minus text-xs"></i>
+        </button>
+        <input
+          type="number"
+          id="quantity-input"
+          name="quantity"
+          value="{{ cart.quantity|default:1 }}"
+          min="1"
+          max="{{ selected_variant.stock_quantity }}"
+          class="w-12 bg-transparent text-center font-black text-sm focus:outline-none"
+          required
+        />
+        <button
+          type="button"
+          onclick="incrementQuantity('quantity-input')"
+          class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+        >
+          <i class="fas fa-plus text-xs"></i>
+        </button>
+      </div>
+
+      <button
+        type="submit"
+        class="flex-grow bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-black uppercase tracking-widest hover:opacity-90 transition-all active:scale-[0.98]"
+      >
+        {% if cart.quantity > 0 %}Update Cart{% else %}Add to Collection{% endif %}
+      </button>
+    </div>
+  </form>
+  {% else %}
+  <a
+    href="{% url 'login' %}"
+    class="block text-center bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-black uppercase tracking-widest hover:opacity-90 transition-all"
+  >
+    Sign In to Purchase
+  </a>
+  {% endif %} {% else %}
+  <button
+    disabled
+    class="w-full bg-gray-100 dark:bg-gray-800 text-gray-400 py-4 rounded-lg font-black uppercase tracking-widest cursor-not-allowed"
+  >
+    Out of Stock
+  </button>
+  {% endif %}
+</div>
+
+<!-- Support & Shipping Notes -->
+<div
+  class="mt-12 grid grid-cols-2 gap-6 pt-8 border-t border-gray-100 dark:border-gray-800"
+>
+  <div>
+    <h4
+      class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1"
+    >
+      Free Shipping
+    </h4>
+    <p class="text-[11px] font-bold tracking-tight">On orders over ₦50,000</p>
+  </div>
+  <div>
+    <h4
+      class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1"
+    >
+      Authentic Gear
+    </h4>
+    <p class="text-[11px] font-bold tracking-tight">Verified streetwear only</p>
+  </div>
+</div>

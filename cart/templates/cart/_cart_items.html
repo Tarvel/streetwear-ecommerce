@@ -1,118 +1,221 @@
-{% load humanize %}
-{% if cart_items %}
-  <!-- Cart Items -->
-  <div class="border rounded-lg shadow-md mb-8 bg-white dark:bg-gray-800">
-    <!-- Desktop Header -->
-    <div class="hidden md:grid md:grid-cols-6 gap-4 bg-gray-100 dark:bg-gray-900 p-4 font-heading font-semibold text-lg rounded-t-lg">
-      <div class="col-span-3">Product</div>
-      <div class="text-center">Price</div>
-      <div class="text-center">Quantity</div>
-      <div class="text-right">Total</div>
-    </div>
-
-    {% for item in cart_items %}
-      <div class="border-t border-gray-200 dark:border-gray-600 p-4 flex flex-col md:grid md:grid-cols-6 md:gap-4 md:items-center">
-            
-            <!-- Part 1: Image & Details (Spans 3 cols on desktop) -->
-            <div class="flex items-start space-x-4 md:col-span-3">
-              <a href="{% url 'product_detail' item.variant.product.slug %}">
-                <img src="{{ item.variant.image.url }}"
-                     alt="{{ item.variant.product.name }}"
-                     class="w-20 h-20 md:w-16 md:h-16 object-cover rounded-md flex-shrink-0">
-              
-              <div>
-                <h3 class="text-lg font-semibold font-heading">{{ item.variant.product.name }}</h3></a>
-                <p class="text-gray-600 dark:text-gray-300 font-body">
-                  Selected: {% if item.variant.size != "NA" %}{{ item.variant.size }} - {% endif %}{% if item.variant.colour %}{{ item.variant.colour|title }}{% endif %}
-                </p>
-                 {% if item.product.stock_quantity == 0 %}
-                    <p class="text-red-500 font-semibold text-sm mt-1">Out of Stock</p>
-                {% endif %}
-                <form method="post" action="{% url 'delete_cart' item.id %}" class="mt-2 inline-flex items-center space-x-1">
-                  {% csrf_token %}
-                  <button type="submit" name="remove" value="true" class="text-accent hover:underline font-body text-sm flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4" />
-                    </svg>
-                    Remove
-                  </button>
-                </form>
-              </div>
+{% load humanize %} {% if cart_items %}
+<div class="space-y-6">
+  {% for item in cart_items %}
+  <div
+    class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden group tracking-tight"
+  >
+    <div class="p-6 flex flex-col md:flex-row items-center gap-6">
+      <!-- Product Image & Basic Info -->
+      <div class="flex items-center gap-6 flex-grow w-full md:w-auto">
+        <div class="flex-shrink-0 relative p-1">
+          <div
+            class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800"
+          >
+            {% if item.variant.image %}
+            <img
+              src="{{ item.variant.image.url }}"
+              alt="{{ item.variant.product.name }}"
+              class="w-full h-full object-cover"
+            />
+            {% elif item.variant.product.image %}
+            <img
+              src="{{ item.variant.product.image.url }}"
+              alt="{{ item.variant.product.name }}"
+              class="w-full h-full object-cover"
+            />
+            {% else %}
+            <div
+              class="w-full h-full flex items-center justify-center text-gray-300"
+            >
+              <i class="fas fa-image text-2xl"></i>
             </div>
-
-            <!-- Part 2: Price, Quantity, Total (Spans 3 cols on desktop) -->
-            <!-- This container arranges the 3 items below nicely on both mobile and desktop -->
-            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 md:border-t-0 md:pt-0 md:mt-0 md:col-span-3 md:grid md:grid-cols-3 md:gap-4 md:items-center">
-
-              <!-- Price (Mobile & Desktop) -->
-              <div class="text-left md:text-center">
-                <span class="text-sm font-body text-gray-500 md:hidden">Price</span>
-                {% if not item.variant.product.stock_quantity == 0 %}
-                <p class="font-body font-semibold">₦{{ item.variant.price|intcomma }}</p>
-                {% endif %}
-              </div>
-              
-              <!-- Quantity (Mobile & Desktop) -->
-              <div class="md:text-center">
-                 {% if not item.product.stock_quantity == 0 %}
-                <form method="post" action="{% url 'update_cart' item.variant.id %}" class="ajax-cart-form" data-target="#cart-items-wrapper">
-                  {% csrf_token %}
-                  <div class="flex items-center justify-center space-x-2">
-                    <button type="button" onclick="decrementCartQuantity('quantity-{{ item.id }}')" class="px-2 py-1 text-gray-700 bg-gray-200 dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition">-</button>
-                    <input type="number"
-                          id="quantity-{{ item.id }}"
-                          name="quantity"
-                          value="{{ item.quantity }}"
-                          min="1"
-                          max="{{ item.variant.stock_quantity }}"
-                          class="w-16 px-3 py-1 border-none bg-transparent font-body text-center focus:outline-none focus:ring-2 focus:ring-accent appearance-none"
-                          style="-webkit-appearance: none; -moz-appearance: textfield;"
-                          required>
-                    <button type="button" onclick="incrementCartQuantity('quantity-{{ item.id }}')"  class="px-2 py-1 text-gray-700 bg-gray-200 dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition">+</button>
-                  </div>
-                </form>
-                {% else %}
-                  <p class="font-body text-sm text-gray-500">-</p>
-                {% endif %}
-              </div>
-
-              <!-- Total (Mobile & Desktop) -->
-              <div class="text-right">
-                <span class="text-sm font-body text-gray-500 md:hidden">Total</span>
-                {% if not item.product.stock_quantity == 0 %}
-                <p class="font-body font-semibold">₦{{ item.total_price|intcomma }}</p>
-                {% endif %}
-              </div>
-            </div>
+            {% endif %}
           </div>
-    {% endfor %}
-  </div>
+        </div>
 
-  <!-- Cart Summary -->
-  <div class="flex flex-col md:flex-row md:justify-end">
-    <div class="w-full md:w-1/2 lg:w-1/3 bg-gray-100 dark:bg-gray-900 p-6 rounded-lg shadow-md">
-      <h3 class="text-xl font-bold font-heading mb-4">Order Summary</h3>
-      <div class="flex justify-between font-body mb-2">
-        <span>Subtotal</span>
+        <div class="flex-grow">
+          <h4 class="font-bold text-lg tracking-tight leading-tight mb-1">
+            <a
+              href="{% url 'product_detail' item.variant.product.slug %}"
+              class="hover:underline"
+            >
+              {{ item.variant.product.name }}
+            </a>
+          </h4>
+          <div
+            class="text-xs text-gray-500 uppercase tracking-widest font-black space-x-2"
+          >
+            {% if item.variant.size != "NA" %}<span
+              >{{ item.variant.size }}</span
+            >{% endif %} {% if item.variant.colour %}<span class="text-gray-300"
+              >|</span
+            ><span>{{ item.variant.colour }}</span>{% endif %}
+          </div>
+
+          <button
+            hx-post="{% url 'delete_cart' item.id %}"
+            hx-target="#cart-items-wrapper"
+            hx-swap="innerHTML"
+            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+            class="mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-red-500 hover:text-red-600 transition-colors flex items-center gap-2"
+          >
+            <i class="fas fa-trash-alt"></i> Remove
+          </button>
+        </div>
+      </div>
+
+      <!-- Price & Quantity Controls -->
+      <div
+        class="flex flex-wrap items-center justify-between md:justify-end gap-8 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 dark:border-gray-800"
+      >
+        <!-- Unit Price -->
+        <div class="text-left md:text-right">
+          <p
+            class="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-1"
+          >
+            Price
+          </p>
+          <p class="font-bold">₦{{ item.variant.price|intcomma }}</p>
+        </div>
+
+        <!-- Quantity Selector -->
+        <div class="flex flex-col items-center">
+          <p
+            class="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-2"
+          >
+            Quantity
+          </p>
+          <div
+            class="flex items-center border border-gray-100 dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-800/50 p-1"
+          >
+            <button
+              type="button"
+              hx-post="{% url 'update_cart' item.variant.id %}"
+              hx-target="#cart-items-wrapper"
+              hx-vals='js:{"quantity": Math.max(1, parseInt(document.getElementById("qty-{{ item.id }}").value) - 1)}'
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+            >
+              <i class="fas fa-minus text-[10px]"></i>
+            </button>
+            <input
+              type="number"
+              id="qty-{{ item.id }}"
+              name="quantity"
+              value="{{ item.quantity }}"
+              min="1"
+              max="{{ item.variant.stock_quantity }}"
+              hx-post="{% url 'update_cart' item.variant.id %}"
+              hx-trigger="change delay:500ms"
+              hx-target="#cart-items-wrapper"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              class="w-12 bg-transparent text-center font-black text-sm focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white rounded"
+            />
+            <button
+              type="button"
+              hx-post="{% url 'update_cart' item.variant.id %}"
+              hx-target="#cart-items-wrapper"
+              hx-vals='js:{"quantity": Math.min({{ item.variant.stock_quantity }}, parseInt(document.getElementById("qty-{{ item.id }}").value) + 1)}'
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+            >
+              <i class="fas fa-plus text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Item Total -->
+        <div class="text-right min-w-[100px]">
+          <p
+            class="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-1"
+          >
+            Total
+          </p>
+          <p class="font-black text-lg tracking-tighter">
+            ₦{{ item.total_price|intcomma }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Cart Summary -->
+<div class="mt-12 flex justify-end">
+  <div
+    class="w-full md:w-96 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden"
+  >
+    <div
+      class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800"
+    >
+      <h3 class="text-sm font-black uppercase tracking-widest">
+        Order Summary
+      </h3>
+    </div>
+    <div class="p-6 space-y-4">
+      <div
+        class="flex justify-between items-center text-sm font-bold tracking-tight"
+      >
+        <span class="text-gray-400 uppercase text-[10px] tracking-widest"
+          >Subtotal</span
+        >
         <span>₦{{ cart_subtotal|intcomma }}</span>
       </div>
-      <div class="flex justify-between font-body mb-4 font-semibold text-lg">
-        <span>Estimated Total</span>
-        <span>₦{{ cart_subtotal|intcomma }}</span>
+      <div
+        class="flex justify-between items-center border-t border-gray-50 dark:border-gray-800 pt-4"
+      >
+        <span class="text-[11px] font-black uppercase tracking-widest"
+          >Estimated Total</span
+        >
+        <span class="text-2xl font-black tracking-tighter"
+          >₦{{ cart_subtotal|intcomma }}</span
+        >
       </div>
-      <a href="{% url 'checkout' %}" class="block w-full bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition text-center">
+      <a
+        href="{% url 'checkout' %}"
+        class="block w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-black uppercase tracking-widest text-center hover:opacity-90 transition-all active:scale-[0.98] mt-6"
+      >
         Proceed to Checkout
       </a>
     </div>
   </div>
+</div>
+
 {% else %}
-  <!-- Empty Cart -->
-  <div class="text-center py-16 px-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-    <i class="fas fa-shopping-cart text-5xl text-gray-400 dark:text-gray-500 mb-4"></i>
-    <p class="text-gray-600 dark:text-gray-300 font-body text-xl mb-6">Your cart is empty.</p>
-    <a href="{% url 'shop' %}" class="bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-2 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition">
-      Shop Now
-    </a>
+<div class="py-24 text-center">
+  <div
+    class="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6"
+  >
+    <i class="fas fa-shopping-bag text-gray-300 text-2xl"></i>
   </div>
+  <h3 class="text-2xl font-black uppercase tracking-tighter mb-2">
+    Your Pack is Empty
+  </h3>
+  <p class="text-gray-400 text-sm mb-8 tracking-tight">
+    Re-up on latest drops to fill it up.
+  </p>
+  <a
+    href="{% url 'shop' %}"
+    class="inline-block bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-lg font-black uppercase tracking-widest hover:opacity-90 transition-opacity"
+  >
+    Go to Shop
+  </a>
+</div>
+{% endif %} {% if message %}
+<div hx-swap-oob="innerHTML:#toast-message" class="flex items-center gap-3">
+  <i class="fas fa-check-circle text-green-500"></i>
+  <span class="text-xs font-bold uppercase tracking-tight">{{ message }}</span>
+</div>
+<script>
+  (function () {
+    const toast = document.getElementById("toast-message");
+    toast.classList.remove("hidden");
+    toast.classList.add("flex");
+    setTimeout(() => {
+      toast.classList.add("hidden");
+      toast.classList.remove("flex");
+    }, 3000);
+  })();
+</script>
 {% endif %}

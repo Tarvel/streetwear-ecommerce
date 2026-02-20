@@ -2,7 +2,7 @@ import json
 import uuid
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
+# from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 from django.utils import timezone
@@ -13,14 +13,18 @@ from payment.paystack import checkout
 from orders.models import OrderItem, Order
 from products.models import ProductVariant
 from django.template.loader import render_to_string
+from django.db import transaction, DatabaseError
+from django.db.models import F
 
 
 @login_required(login_url="login")
 def cartPage(request):
+    page = "cart"
     cart_items = Cart.objects.filter(user=request.user).all()
     cart_subtotal = sum(item.total_price for item in cart_items)
 
     context = {
+        "page": page,
         "cart_items": cart_items,
         "cart_subtotal": cart_subtotal,
     }
@@ -112,29 +116,16 @@ def updateCart(request, variant_id):
         cart_items = Cart.objects.filter(user=request.user)
         cart_subtotal = sum(item.total_price for item in cart_items)
 
-        html = render_to_string(
-            "cart/_cart_items.html",
-            {
-                "cart_items": cart_items,
-                "cart_subtotal": cart_subtotal,
-            },
-            request=request,
-        )
+        context = {
+            "cart_items": cart_items,
+            "cart_subtotal": cart_subtotal,
+            "message": msg,
+        }
 
-        if (
-            request.headers.get("HX-Request")
-            or request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
-        ):
-            return JsonResponse(
-                {
-                    "html": html,
-                    "message": msg,
-                }
-            )
-            # Return just the grid HTML
-
-        else:
-            return redirect("cart")
+        if request.headers.get("HX-Request"):
+            return render(request, "cart/_cart_items.html", context)
+        
+        return redirect("cart")
 
     return JsonResponse({"error": "Invalid request."}, status=400)
 
@@ -142,30 +133,37 @@ def updateCart(request, variant_id):
 @login_required(login_url="login")
 def removeCart(request, cart_id):
     try:
-        cart = Cart.objects.filter(pk=cart_id).first()
+        cart = Cart.objects.get(pk=cart_id, user=request.user)
     except Cart.DoesNotExist:
         return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
     if request.method == "POST":
-        if request.POST.get("remove") == "true":
-            messages.info(
-                request,
-                f"{cart.variant.product.name.title()} [{cart.variant.size.title()}-{cart.variant.colour.title() if cart.variant.size.title() is not None else ""}] has been removed from cart",
-            )
-            cart.delete()
-        else:
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+        msg = f"{cart.variant.product.name.title()} removed from cart."
+        cart.delete()
+
+        cart_items = Cart.objects.filter(user=request.user)
+        cart_subtotal = sum(item.total_price for item in cart_items)
+
+        context = {
+            "cart_items": cart_items,
+            "cart_subtotal": cart_subtotal,
+            "message": msg,
+        }
+
+        if request.headers.get("HX-Request"):
+            return render(request, "cart/_cart_items.html", context)
+
+        messages.info(request, msg)
+        return redirect("cart")
+
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
 @login_required(login_url="login")
 def checkoutPage(request):
-    if request.user.is_authenticated:
-        user = request.user
-    else:
-        messages.info(request, "Please login to access checkout")
-        return redirect("login")
+    user = request.user
 
+    # Basic Validation
     cart_items = Cart.objects.filter(user=user)
     if not cart_items.exists():
         messages.error(request, "Your cart is empty.")
@@ -174,39 +172,105 @@ def checkoutPage(request):
     cart_subtotal = sum(item.total_price for item in cart_items)
 
     if request.method == "POST":
-        # generate unique ids for order and payment reference
         unique_order_id = uuid.uuid4()
         unique_reference_id = f"ord-{uuid.uuid4().hex[0:8]}"
 
-        # Createing or get pending order
-        order, created = Order.objects.get_or_create(
-            user=user,
-            order_id=unique_order_id,
-            reference=unique_reference_id,
-            status="pending",
-            defaults={
-                "total_amount": cart_subtotal,
-                "shipping_address": user.userdetail.delivery_address,
-            },
-        )
+        #define 'order' as None initially so it b can be accessed in the 'except' block if needed
+        order = None
 
-        # Loop through cart items and create order items
-        for cart_item in cart_items:
-            OrderItem.objects.get_or_create(
-                order=order,
-                variant=cart_item.variant,
-                defaults={
-                    "quantity": cart_item.quantity,
-                    "price": cart_item.variant.price,
-                },
+        try:
+            # ATOMIC DATABASE TRANSACTION (for race conditions)
+            # We reserve the stock and create the order BEFORE calling Paystack.
+            with transaction.atomic():
+
+                print("transaction lock start")
+
+                # A. Lock the Variants (Pessimistic Locking)
+                # fetch all variant IDs involved in this cart
+                variant_ids = [item.variant.id for item in cart_items]
+
+                # lock these rows.
+                # .order_by('id') is CRITICAL to prevent Deadlocks if two users buy same items in different order
+                locked_variants = list(
+                    ProductVariant.objects.select_for_update()
+                    .filter(id__in=variant_ids)
+                    .order_by("id")
+                )
+
+                # Create a map for easy lookup {id: variant_instance}
+                variant_map = {v.id: v for v in locked_variants}
+
+                # B. Verify Stock and Deduct
+                for item in cart_items:
+                    variant = variant_map.get(item.variant.id)
+
+                    # specific check: if product was deleted mid-transaction
+                    if not variant:
+                        raise ValueError(
+                            f"Product {item.variant.product.name} is no longer available."
+                        )
+
+                    # Check if enough stock exists
+                    if variant.stock_quantity < item.quantity:
+                        raise ValueError(
+                            f"Sorry, {variant.product.name} is out of stock."
+                        )
+
+                    # Deduct the stock (Reservation)
+                    variant.stock_quantity -= item.quantity
+                    variant.save()
+
+                # C. Create the Order (Using 'create' since we have a unique UUID)
+                print("transaction lock order created")
+                order = Order.objects.create(
+                    user=user,
+                    order_id=unique_order_id,
+                    reference=unique_reference_id,
+                    status="pending",
+                    total_amount=cart_subtotal,
+                    shipping_address=user.userdetail.delivery_address,
+                )
+
+                # Create the Payment Instance HERE
+                # We create it as PENDING. This is our log that they tried to pay.
+                payment = Payment.objects.create(
+                    order=order,
+                    user=user,
+                    payment_reference=unique_reference_id, # Link it by the reference
+                    amount=order.total_amount,
+                    status="pending",
+                )
+
+                # D. Create Order Items
+                for cart_item in cart_items:
+                    OrderItem.objects.create(
+                        order=order,
+                        variant=cart_item.variant,
+                        quantity=cart_item.quantity,
+                        price=cart_item.variant.price,
+                    )
+
+                # E. Clear the User's Cart
+                cart_items.delete()
+                print("transaction lock cart deleted")
+
+        except ValueError as e:
+            # This catches our custom stock errors
+            messages.error(request, str(e))
+            return redirect("cart")  # Redirect back to cart page
+
+        except DatabaseError:
+            # This catches database locks/timeouts
+            print("transaction lock in place, diff user buying")
+            messages.error(
+                request, "The system is busy processing other orders. Please try again."
             )
+            return redirect("cart")
 
-        cart_items.delete()
 
-        # convert UUID to string (cos 'Object of type UUID is not JSON serializable' lol)
-        json_data = json.dumps({"order_id": str(order.order_id)})
+        # STEP 2: NETWORK REQUEST (Outside Transaction)
+        # The stock is now reserved. Now we talk to Paystack.
 
-        # Build callback URL
         payment_success_url = reverse(
             "payment-success", kwargs={"order_id": order.order_id}
         )
@@ -214,7 +278,7 @@ def checkoutPage(request):
 
         checkout_data = {
             "email": user.email or user.username,
-            "amount": int(order.total_amount * 100),  # convert to kobo
+            "amount": int(order.total_amount * 100),
             "currency": "NGN",
             "channels": ["card", "bank_transfer", "bank", "ussd", "qr", "mobile_money"],
             "reference": str(order.reference),
@@ -227,36 +291,34 @@ def checkoutPage(request):
             "label": f"Checkout For order: {order.order_id}",
         }
 
-        # Call checkout logic
+        # Call Paystack
         status, checkout_url, payment_reference = checkout(checkout_data)
 
         if status:
-            # if the connection to paystack is sucessful, update the order status to pending (default), cos, technically, the payment is in a pending state unless payment is scuessful
-            # we will get this success status from our webhook
-            order.updated_at = timezone.now()
-            order.save()
             return redirect(checkout_url)
 
         else:
-            # if theres an error, first update the order status and time the error in payment occured, then make a failed payment instance sha
+            # FAILURE: Paystack refused to connect (or API error)
+            # COMPENSATION TRANSACTION
+            # We must restore the stock we deducted in Step 1
 
-            order.status = "failed"
-            order.updated_at = timezone.now()
-            order.save()
+            with transaction.atomic():
+                order.status = "failed"
+                order.save()
+                
+                # update the existing payment to failed
+                payment.status = "failed"
+                payment.save()
 
-            payment, create = Payment.objects.get_or_create(
-                order=order,
-                user=user,
-                defaults={
-                    "amount": order.total_amount,
-                },
-            )
+                # Restore Stock
+                # We iterate over the order items we just created
+                for item in order.items.all():
+                    # Use F expression for atomic update on restoration
+                    item.variant.stock_quantity = F("stock_quantity") + item.quantity
+                    item.variant.save()
 
-            payment.status = "failed"
-            payment.paid_at = timezone.now()
-            payment.save()
 
-            messages.error(request, checkout_url)  # Shows error message
+            messages.error(request, "Could not initialize payment provider.")
             return redirect("payment-fail", order.order_id)
 
     context = {

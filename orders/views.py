@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from .models import Order
 
 
@@ -9,7 +10,19 @@ def orderHistory(request):
     user = request.user
     orders = Order.objects.filter(user=user).order_by("-updated_at")
 
-    context = {"orders": orders}
+    # Pagination - 5 orders per page
+    paginator = Paginator(orders, 5)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "orders": page_obj,
+        "page_obj": page_obj,
+    }
+
+    # for HTMX requests, return only the partial template
+    if request.headers.get("HX-Request"):
+        return render(request, "orders/_order_list.html", context)
 
     return render(request, "orders/order_history.html", context)
 

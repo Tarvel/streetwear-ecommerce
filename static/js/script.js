@@ -35,14 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const flashMessages = document.querySelectorAll('.flash-message');
   flashMessages.forEach((msg, index) => {
     setTimeout(() => {
-      msg.classList.remove('opacity-0', '-translate-y-12', 'md:translate-x-full');
-    }, 100 + (index * 200));
+      msg.classList.remove('opacity-0', '-translate-y-4', 'md:translate-x-full');
+    }, 50 + (index * 150));
     setTimeout(() => {
-      msg.classList.add('opacity-0', '-translate-y-12', 'md:translate-x-full');
+      msg.classList.add('opacity-0', '-translate-y-4', 'md:translate-x-full');
       setTimeout(() => {
         msg.remove();
-      }, 500);
-    }, 4000 + (index * 200));
+      }, 300);
+    }, 5000 + (index * 150));
   });
 
   const themeToggle = document.getElementById('theme-toggle');
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextBtn = document.getElementById('next-slide-btn');
     const prevBtn = document.getElementById('prev-slide-btn');
     const indicatorsContainer = document.getElementById('slideshow-indicators');
-    const autoPlayDelay = 3000;
+    const autoPlayDelay = 5000;
 
     let currentIndex = 0;
     let slideInterval;
@@ -160,18 +160,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       animateText(currentSlide, false);
 
-      currentSlide.classList.remove('opacity-100', 'z-10', 'scale-100');
-      currentSlide.classList.add('opacity-0', 'z-0', 'scale-105');
-      nextSlide.classList.remove('opacity-0', 'z-0', 'scale-95');
-      nextSlide.classList.add('opacity-100', 'z-10', 'scale-100');
+      // Pure opacity crossfade - no scale transforms
+      currentSlide.classList.remove('opacity-100', 'z-10');
+      currentSlide.classList.add('opacity-0', 'z-0');
+      nextSlide.classList.remove('opacity-0', 'z-0');
+      nextSlide.classList.add('opacity-100', 'z-10');
 
       setTimeout(() => {
         animateText(nextSlide, true);
       }, 350);
-      setTimeout(() => {
-        currentSlide.classList.remove('scale-105');
-        currentSlide.classList.add('scale-95');
-      }, 1000);
 
       indicators[currentIndex].classList.replace('bg-white', 'bg-white/40');
       indicators[index].classList.replace('bg-white/40', 'bg-white');
@@ -200,8 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     nextBtn.addEventListener('click', () => { nextSlide(); resetInterval(); });
     prevBtn.addEventListener('click', () => { prevSlide(); resetInterval(); });
-    container.addEventListener('mouseenter', () => clearInterval(slideInterval));
-    container.addEventListener('mouseleave', startInterval);
+    // Removed mouseenter/mouseleave pause - slideshow now continues on hover/tap
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         clearInterval(slideInterval);
@@ -221,10 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (button && dropdown) {
       button.addEventListener('click', (event) => {
         event.stopPropagation();
-        document.querySelectorAll('.absolute.z-20').forEach(menu => {
-            if (menu.id !== dropdownId) {
-               menu.classList.add('hidden');
-            }
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          if (menu.id !== dropdownId) {
+            menu.classList.add('hidden');
+          }
         });
         dropdown.classList.toggle('hidden');
       });
@@ -238,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDropdown('user-btn', 'user-dropdown');
 
   window.addEventListener('click', () => {
-    document.querySelectorAll('.absolute.z-20').forEach(menu => {
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
       if (!menu.classList.contains('hidden')) {
         menu.classList.add('hidden');
       }

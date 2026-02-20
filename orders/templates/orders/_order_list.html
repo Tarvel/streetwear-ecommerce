@@ -1,0 +1,114 @@
+{% load humanize %} {% for order in orders %}
+<div
+  class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden group tracking-tight mb-4"
+>
+  <!-- Order Meta Header -->
+  <div
+    class="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 flex flex-wrap items-center justify-between gap-4 text-xs font-medium uppercase tracking-wider"
+  >
+    <div class="flex items-center gap-6">
+      <div class="flex flex-col">
+        <span class="text-gray-400">Order Placed</span>
+        <span class="text-gray-900 dark:text-gray-100"
+          >{{ order.created_at|date:"M j, Y" }}</span
+        >
+      </div>
+      <div class="flex flex-col">
+        <span class="text-gray-400">Total</span>
+        <span class="text-gray-900 dark:text-gray-100"
+          >₦{{ order.total_amount|intcomma }}</span
+        >
+      </div>
+      <div class="hidden sm:flex flex-col">
+        <span class="text-gray-400">Order #</span>
+        <span class="text-gray-900 dark:text-gray-100">{{ order.id }}</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span
+        class="inline-flex items-center gap-1.5 {% if order.status == 'paid' or order.status == 'Delivered' %} text-green-600 {% elif order.status == 'failed' or order.status == 'cancelled' %} text-red-600 {% elif order.status == 'shipped' %} text-blue-600 {% else %} text-yellow-600 {% endif %}"
+      >
+        <span class="w-2 h-2 rounded-full bg-current"></span>
+        {{ order.get_status_display }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Items Row -->
+  <div class="p-4 flex flex-col md:flex-row justify-between items-center gap-6">
+    <div
+      class="flex-grow flex items-center gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide"
+    >
+      {% for item in order.items.all %}
+      <div class="flex-shrink-0 relative group/item p-1">
+        <div
+          class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800"
+        >
+          {% if item.variant.image %}
+          <img
+            src="{{ item.variant.image.url }}"
+            alt="{{ item.variant.product.name }}"
+            class="w-full h-full object-cover"
+          />
+          {% elif item.variant.product.image %}
+          <img
+            src="{{ item.variant.product.image.url }}"
+            alt="{{ item.variant.product.name }}"
+            class="w-full h-full object-cover"
+          />
+          {% else %}
+          <div
+            class="w-full h-full flex items-center justify-center text-gray-300"
+          >
+            <i class="fas fa-image"></i>
+          </div>
+          {% endif %}
+        </div>
+        <span
+          class="absolute top-0 right-0 bg-black dark:bg-white text-white dark:text-black text-[11px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-900 ring-1 ring-black/5"
+        >
+          {{ item.quantity }}
+        </span>
+
+        <!-- Tooltip-style info on hover -->
+        <div
+          class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-[10px] rounded opacity-0 group-hover/item:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10"
+        >
+          {{ item.variant.product.name }} ({{ item.variant.size }})
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="flex-shrink-0 flex gap-2 w-full md:w-auto">
+      <a
+        href="{% url 'order-detail' order.order_id %}"
+        class="flex-1 md:flex-none text-center px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-md text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors uppercase tracking-tight"
+      >
+        View Order
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if forloop.last and page_obj.has_next %}
+<div
+  hx-get="?page={{ page_obj.next_page_number }}"
+  hx-trigger="revealed"
+  hx-swap="outerHTML"
+  class="py-8 flex justify-center"
+>
+  <div
+    class="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white"
+  ></div>
+</div>
+{% endif %} {% empty %} {% if not request.headers.HX_Request %}
+<div class="py-20 text-center">
+  <p class="text-gray-400 font-medium mb-4">No orders found.</p>
+  <a
+    href="{% url 'shop' %}"
+    class="underline tracking-tight font-bold uppercase"
+    >Go to Shop</a
+  >
+</div>
+{% endif %} {% endfor %}

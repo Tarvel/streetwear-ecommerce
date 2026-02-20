@@ -1,81 +1,95 @@
 {% extends 'base.html' %}
 {% block title %}Update Your Details{% endblock %}
 {% block content %}
-  <!-- Update Details Section -->
-  <section class="py-12">
-    <div class="text-center mb-12">
-      <h2 class="text-4xl font-bold font-heading mb-4">Update Your Details</h2>
-      <p class="text-gray-600 dark:text-gray-300 font-body text-lg max-w-2xl mx-auto">
-        Keep your Wimer account information up to date.
-      </p>
+  <section class="py-12 px-4 max-w-2xl mx-auto">
+    <!-- Header Section -->
+    <div class="mb-12 border-b-4 border-black dark:border-white pb-6 bg-white dark:bg-gray-800 sticky top-0 z-10">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 class="text-3xl md:text-4xl font-black leading-none tracking-tighter uppercase">Details</h2>
+          <p class="text-gray-500 dark:text-gray-400 font-body text-sm mt-2 uppercase tracking-widest font-bold">Account / Update</p>
+        </div>
+        
+        <!-- Smart Go Back Button -->
+        <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'home' %}{% endif %}" 
+           class="inline-flex items-center gap-2 font-heading text-lg tracking-tight hover:text-accent transition-colors group">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5 transition-transform group-hover:-translate-x-1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          GO BACK
+        </a>
+      </div>
     </div>
-    <div class="max-w-md mx-auto">
-      <!-- Update Details Form -->
-      <form method="post" action="{% url 'update_detail' %}" class="space-y-6">
+
+    <!-- Form Section -->
+    <div class="max-w-xl">
+      <form method="post" action="{% url 'update_detail' %}" class="space-y-8">
         {% csrf_token %}
-        <!-- Form Errors -->
+        <input type="hidden" name="next" value="{{ next_url|default:'' }}">
+
+        <!-- Form Errors (Using new alert style) -->
         {% if user_form.errors or detail_form.errors %}
-          <div class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 p-4 rounded-md font-body">
-            {% for field in user_form %}
-              {% for error in field.errors %}
-                <p>{{ field.label }}: {{ error }}</p>
+          <div class="border-2 border-accent p-4 bg-white dark:bg-gray-900 shadow-[8px_8px_0px_0px_rgba(230,57,70,0.1)] mb-8">
+            <span class="font-heading text-accent text-xl uppercase block mb-2">Form Errors</span>
+            <div class="font-body text-sm font-semibold text-gray-800 dark:text-gray-200 space-y-1">
+              {% for field in user_form %}
+                {% for error in field.errors %}<p>{{ field.label }}: {{ error }}</p>{% endfor %}
               {% endfor %}
-            {% endfor %}
-            {% for error in user_form.non_field_errors %}
-              <p>{{ error }}</p>
-            {% endfor %}
-            {% for field in detail_form %}
-              {% for error in field.errors %}
-                <p>{{ field.label }}: {{ error }}</p>
+              {% for error in user_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+              {% for field in detail_form %}
+                {% for error in field.errors %}<p>{{ field.label }}: {{ error }}</p>{% endfor %}
               {% endfor %}
-            {% endfor %}
-            {% for error in detail_form.non_field_errors %}
-              <p>{{ error }}</p>
-            {% endfor %}
+              {% for error in detail_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
           </div>
         {% endif %}
-        <!-- User Form Fields: First Name and Last Name Side by Side -->
-        <div class="flex gap-4">
-          <div class="w-1/2">
-            <label for="id_first_name" class="block text-lg font-semibold font-heading mb-2">First Name</label>
-            <input type="text" id="id_first_name" name="first_name" value="{{ user_form.first_name.value|default:request.user.first_name }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your first name">
+
+        <!-- Input Groups -->
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label for="id_first_name" class="block font-heading text-xl uppercase tracking-tight">First Name</label>
+              <input type="text" id="id_first_name" name="first_name" value="{{ user_form.first_name.value|default:request.user.first_name }}" required 
+                     class="w-full p-4 border-2 border-black dark:border-gray-600 bg-transparent rounded-none font-body font-bold focus:outline-none focus:border-accent dark:focus:border-accent transition-colors" 
+                     placeholder="NAME">
+            </div>
+            <div class="space-y-2">
+              <label for="id_last_name" class="block font-heading text-xl uppercase tracking-tight">Last Name</label>
+              <input type="text" id="id_last_name" name="last_name" value="{{ user_form.last_name.value|default:request.user.last_name }}" required 
+                     class="w-full p-4 border-2 border-black dark:border-gray-600 bg-transparent rounded-none font-body font-bold focus:outline-none focus:border-accent dark:focus:border-accent transition-colors" 
+                     placeholder="SURNAME">
+            </div>
           </div>
-          <div class="w-1/2">
-            <label for="id_last_name" class="block text-lg font-semibold font-heading mb-2">Last Name</label>
-            <input type="text" id="id_last_name" name="last_name" value="{{ user_form.last_name.value|default:request.user.last_name }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your last name">
+
+          <div class="space-y-2 opacity-50">
+            <label for="id_email" class="block font-heading text-xl uppercase tracking-tight">Email (ReadOnly)</label>
+            <input type="email" id="id_email" name="email" value="{{ user_form.email.value|default:request.user.email }}" disabled
+                   class="w-full p-4 border-2 border-black/20 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-none font-body font-bold cursor-not-allowed">
           </div>
-        </div>
-        <!-- Other User Form Fields -->
-        <div>
-          <label for="id_email" class="block text-lg font-semibold font-heading mb-2">Email</label>
-          <input
-            type="email"
-            id="id_email"
-            name="email"
-            value="{{ user_form.email.value|default:request.user.email }}"
-            disabled
-            required
-            class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 bg-gray-100 text-gray-500 cursor-not-allowed rounded-md font-body focus:outline-none"
-            placeholder="Enter your email"
-          >
+
+          <div class="space-y-2">
+            <label for="id_phone_number" class="block font-heading text-xl uppercase tracking-tight">Phone Number</label>
+            <input type="tel" id="id_phone_number" name="phone_number" value="{{ detail_form.phone_number.value|default:'' }}" required pattern="\+[0-9]{12,14}" inputmode="numeric"
+                   class="w-full p-4 border-2 border-black dark:border-gray-600 bg-transparent rounded-none font-body font-bold focus:outline-none focus:border-accent dark:focus:border-accent transition-colors" 
+                   placeholder="+123 456 789">
+          </div>
+
+          <div class="space-y-2">
+            <label for="id_address" class="block font-heading text-xl uppercase tracking-tight">Delivery Address</label>
+            <input type="text" id="id_address" name="delivery_address" value="{{ detail_form.delivery_address.value|default:'' }}" required 
+                   class="w-full p-4 border-2 border-black dark:border-gray-600 bg-transparent rounded-none font-body font-bold focus:outline-none focus:border-accent dark:focus:border-accent transition-colors" 
+                   placeholder="123 STREET NAME, CITY">
+          </div>
         </div>
 
-        <!-- User Detail Form Fields -->
-        <div>
-          <label for="id_phone_number" class="block text-lg font-semibold font-heading mb-2">Phone Number</label>
-          <input type="tel" id="id_phone_number" name="phone_number" value="{{ detail_form.phone_number.value|default:'' }}" required pattern="\+[0-9]{12,14}" inputmode="numeric" class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="+1234567890098">
-        </div>
-        <div>
-          <label for="id_address" class="block text-lg font-semibold font-heading mb-2">Delivery Address</label>
-          <input type="text" id="id_address" name="delivery_address" value="{{ detail_form.delivery_address.value|default:'' }}" required class="w-full p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md font-body focus:outline-none focus:ring-2 focus:ring-accent" placeholder="Enter your address">
-        </div>
         <!-- Submit Button -->
-        <button type="submit" class="w-full bg-gray-800 dark:bg-gray-600 text-white font-body font-semibold py-3 px-6 rounded-md hover:bg-accent dark:hover:bg-accent transition">Update Details</button>
+        <div class="pt-6">
+          <button type="submit" 
+                  class="w-full bg-black dark:bg-white text-white dark:text-black font-heading text-2xl py-5 px-8 rounded-none hover:bg-accent dark:hover:bg-accent hover:text-white dark:hover:text-white transition-all transform active:scale-[0.98] uppercase tracking-tighter">
+            Save Updates
+          </button>
+        </div>
       </form>
-      <!-- Link to Profile or Home -->
-      <p class="text-center text-gray-600 dark:text-gray-300 font-body mt-6">
-        Back to <a href="{% url 'home' %}" class="text-accent hover:underline">Home</a>.
-      </p>
     </div>
   </section>
 {% endblock %}

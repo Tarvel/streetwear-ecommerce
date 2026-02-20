@@ -29,6 +29,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;600&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
   <style>
     .logo {
         font-family: 'Inter', sans-serif;
@@ -39,9 +40,24 @@
     header {
       transition: transform 0.3s ease-in-out;
     }
-    /* MODIFIED: Renamed class to avoid conflict with Tailwind's 'hidden' class */
     header.navbar-hidden {
       transform: translateY(-100%);
+    }
+    /* Hide number input spinners globally */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   </style>
 </head>
@@ -50,7 +66,6 @@
     <i id="theme-icon" class="fas fa-moon dark:fa-sun"></i>
   </button>
 
-  <!-- MODIFIED: Header is now sticky, full-width, with a background and shadow. Content is wrapped in a container. -->
   <header id="navbar" class="sticky top-0 z-30 bg-white dark:bg-gray-800">
     <div class="container mx-auto px-4 py-6">
       <div class="flex justify-between items-center">
@@ -66,7 +81,7 @@
               {% if request.user.is_authenticated %}
                   <div class="relative">
                   <a href="{% url 'cart' %}" class="hover:text-accent">
-                    <svg class="h-7 w-7 text-black hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2">
+                    <svg class="h-7 w-7 {% if page == "cart" %}text-accent {% else %} text-black {% endif %} hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                     </svg>
                   </a>
@@ -77,7 +92,7 @@
               {% endif %}
               <div class="relative hidden md:block">
                   <button id="user-btn" class="text-xl hover:text-accent"><i class="fas fa-user"></i></button>
-                  <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-20">
+                  <div id="user-dropdown" class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-20">
                       {% if request.user.is_authenticated %}
                           <a href="{% url 'update_detail' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Update Details</a>
                           <a href="{% url 'order-history' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Order History</a>
@@ -95,7 +110,7 @@
                   <span>SHOP</span>
                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
               </button>
-              <div id="shop-dropdown" class="hidden absolute left-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-20">
+              <div id="shop-dropdown" class="dropdown-menu hidden absolute left-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-20">
                 <a href="{% url 'shop' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">All</a>
                   {% for drop in drops %}
                       <a href="{% url 'shop_drop' drop %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">{{ drop }}</a>
@@ -159,19 +174,26 @@
   </div>
 
   {% if messages %}
-  <div id="flash-messages" class="fixed top-4 inset-x-4 md:inset-x-auto md:right-4 z-50 space-y-3 md:max-w-sm">
+  <div id="flash-messages" class="fixed top-6 right-6 z-50 space-y-4 w-full max-w-[320px] md:max-w-sm px-4 md:px-0">
     {% for message in messages %}
-      <div class="flash-message relative flex items-center p-4 pr-12 rounded-lg shadow-xl text-white opacity-0 -translate-y-12 md:translate-y-0 md:translate-x-full transition-all duration-500 ease-in-out {% if message.tags == 'error' %} bg-red-500 border-l-4 border-red-700 {% else %} bg-slate-800 border-l-4 border-green-500 {% endif %}">
-        <div class="mr-3">
-          {% if message.tags == 'error' %}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clip-rule="evenodd" /></svg>
-          {% else %}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" /></svg>
-          {% endif %}
+      <div class="flash-message relative flex flex-col p-0 rounded-none shadow-[10px_10px_0px_0px_rgba(0,0,0,0.1)] dark:shadow-[10px_10px_0px_0px_rgba(255,255,255,0.05)] border-2 {% if message.tags == 'error' %} border-accent bg-white dark:bg-gray-900 {% else %} border-black dark:border-white bg-white dark:bg-gray-900 {% endif %} opacity-0 -translate-y-4 md:translate-y-0 md:translate-x-full transition-all duration-300 ease-out">
+        <div class="flex items-stretch min-h-[60px]">
+          <!-- Indicator Bar/Label -->
+          <div class="w-2 {% if message.tags == 'error' %} bg-accent {% else %} bg-black dark:bg-white {% endif %}"></div>
+          
+          <div class="flex-grow p-4 pr-10">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-heading text-lg leading-none tracking-tighter {% if message.tags == 'error' %} text-accent {% else %} text-black dark:text-white {% endif %} uppercase">
+                {% if message.tags == 'error' %}Error{% else %}Success{% endif %}
+              </span>
+            </div>
+            <p class="font-body text-sm font-semibold text-gray-800 dark:text-gray-200 leading-tight">{{ message }}</p>
+          </div>
         </div>
-        <span class="flex-grow text-sm font-medium">{{ message }}</span>
-        <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 p-1 rounded-full text-white/70 hover:text-white hover:bg-black/20 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        
+        <!-- Close Button -->
+        <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 p-1 text-gray-400 hover:text-black dark:hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
       </div>
     {% endfor %}
@@ -180,7 +202,6 @@
 
   <footer class="bg-gray-100 dark:bg-gray-900 py-6 md:py-12 mt-auto">
   <div class="container mx-auto px-4">
-    <!-- Grid layout for desktop, vertical stack for mobile -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center md:text-left">
 
       <!-- Brand / About Section -->
@@ -245,7 +266,6 @@
 
   <script src="{% static 'js/script.js' %}"></script>
 
-  <!-- ADDED: Script for navbar hide/show on scroll -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const navbar = document.getElementById('navbar');
@@ -257,15 +277,13 @@
       window.addEventListener('scroll', () => {
         const currentScrollY = window.scrollY;
 
-        // If scrolling down and we're past the navbar, hide it.
         if (currentScrollY > lastScrollY && currentScrollY > navbarHeight) {
           navbar.classList.add('navbar-hidden');
         } else {
-          // If scrolling up or we are at the top of the page, show it.
+
           navbar.classList.remove('navbar-hidden');
         }
         
-        // Update last scroll position for the next event
         lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
       });
     });

@@ -3,9 +3,8 @@ import uuid
 from django.conf import settings
 from payment.paystack import checkout
 from django.contrib import messages
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
 from django.contrib.auth.models import User
 from orders.models import Order
 from .models import Payment
@@ -19,26 +18,15 @@ import hashlib
 
 @login_required(login_url="login")
 def paymentSuccessful(request, order_id):
-    if request.user.is_authenticated:
-        user = request.user
-    else:
-        return redirect("login")
     order = Order.objects.get(order_id=order_id)
-    order.status = "paid"
-    order.updated_at = timezone.now()
-    order.save()
-    try:
-        payment = Payment.objects.get(order__order_id=order_id)
-        payment.status = "success"
-        payment.paid_at = timezone.now()
-        payment.save()
-    except Payment.DoesNotExist:
-        payment = None
-        messages.info(request, "Payment pending")
-
+    
+    # DO NOT SAVE ANYTHING HERE. Just check status.
+    # If the webhook hasn't arrived yet, the user will see "Pending"
+    # You can add a frontend HTMX poller to refresh if you want real-time updates.
+    
     context = {
         "order": order,
-        "user": user,
+        "user": request.user,
     }
     return render(request, "payment/payment_successful.html", context)
 
@@ -50,16 +38,15 @@ def paymentFailed(request, order_id):
 
 @login_required
 def paymentRetry(request, order_id):
-    if request.user.is_authenticated:
-        user = request.user
-    else:
-        return redirect("login")
     order = Order.objects.get(order_id=order_id)
-    order.reference = f"ord-{uuid.uuid4().hex[0:8]}"
+    
+    # 1. Generate NEW reference for this specific attempt
+    new_reference = f"ord-{uuid.uuid4().hex[0:8]}"
+    
+    # 2. Update Order with new reference (so the webhook knows where to look)
+    order.reference = new_reference
     order.save()
 
-    # convert UUID to string (cos 'Object of type UUID is not JSON serializable' lol)
-    json_data = json.dumps({"order_id": str(order.order_id)})
 
     # Build callback URL
     payment_success_url = reverse(
@@ -85,30 +72,25 @@ def paymentRetry(request, order_id):
     # Call checkout logic
     status, checkout_url, payment_reference = checkout(checkout_data)
 
-    payment, create = Payment.objects.get_or_create(
+    # 3. Create NEW Payment intent
+    payment = Payment.objects.create(
         order=order,
         user=user,
-        defaults={
-            "amount": order.total_amount,
-        },
+        payment_reference=new_reference, # Important!
+        amount=order.total_amount,
+        status="pending"
     )
+
+    # 4. Call Paystack
+    status, checkout_url, ref = checkout(checkout_data)
 
     if status:
         return redirect(checkout_url)
-
     else:
-        print(payment_reference)
-        order.status = "failed"
-        order.updated_at = timezone.now()
-        order.save()
-
+        # Update THIS payment attempt to failed
         payment.status = "failed"
-        payment.paid_at = timezone.now()
         payment.save()
-
-        messages.error(request, checkout_url)  # Shows error message
         return redirect("payment-fail", order.order_id)
-
 
 @csrf_exempt
 def paystack_webhook(request):
@@ -123,25 +105,53 @@ def paystack_webhook(request):
         print(f'This is data: {webhook_post_data}')
 
         if webhook_post_data["event"] == "charge.success":
-            metadata = webhook_post_data["data"]["metadata"]
-
-            # get oder_id and user_id to retrive their respective instances, then get payment_reference to populate the newly created Payment instance
-            order_id = metadata["order_id"]
-            user_id = metadata["user_id"]
-            payment_reference = metadata["payment_reference"]
-            print(payment_reference)
-
-            # retrive order and user instances then add them to the newly created Payment instance
-            order = Order.objects.get(order_id=order_id)
-            user = User.objects.get(id=user_id)
-
-            payment = Payment.objects.create(
-                order=order,
-                user=user,
-                payment_reference=payment_reference,
-                amount=order.total_amount,
-                status="success",
-                paid_at=timezone.now(),
-            )
+            # Paystack returns the reference you sent in Step 1
+            reference = webhook_post_data["data"]["reference"] 
+            
+            try:
+                # 1. Find the PENDING payment using the reference
+                payment = Payment.objects.get(payment_reference=reference)
+                
+                # 2. Mark Payment as Success
+                payment.status = "success"
+                payment.paid_at = timezone.now()
+                payment.save()
+                
+                # 3. Mark Order as Paid
+                order = payment.order
+                order.status = "paid"
+                order.updated_at = timezone.now()
+                order.save()
+                
+            except Payment.DoesNotExist:
+                pass 
 
     return HttpResponse(status=200)
+
+
+@login_required(login_url="login")
+def check_payment_status(request, order_id):
+    try:
+        order = Order.objects.get(order_id=order_id)
+        # Get the latest payment for this order
+        payment = Payment.objects.filter(order=order).order_by("-created_at").first()
+        
+        status = payment.status if payment else "pending"
+        
+        context = {
+            "order": order,
+            "status": status,
+            "payment": payment,
+        }
+        
+        if status == "success":
+            return render(request, "payment/partials/_payment_status_success.html", context)
+        elif status == "failed":
+            return render(request, "payment/partials/_payment_status_failed.html", context)
+        else:
+            # Still pending, return the polling partial
+            return render(request, "payment/partials/_payment_status_pending.html", context)
+            
+    except Order.DoesNotExist:
+        return HttpResponse("Order not found", status=404)
+

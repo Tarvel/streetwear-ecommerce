@@ -16,8 +16,11 @@ from .models import (
 
 
 def home(request):
-    slideshow_images = list(Product.objects.all())
+    slideshow_images = list(
+        Product.objects.filter(image__isnull=False).exclude(image="")
+    )
     random.shuffle(slideshow_images)
+    slideshow_images = slideshow_images[:5]
     newest_products = Product.objects.filter(is_available=True).order_by("-created_at")[
         0:6
     ]
@@ -127,6 +130,10 @@ def product_detail(request, slug):
         "selected_variant": selected_variant,
         "cart": cart_item,
     }
+
+    if request.headers.get("HX-Request"):
+        return render(request, "products/_product_info.html", context)
+
     return render(request, "products/product_detail.html", context)
 
 

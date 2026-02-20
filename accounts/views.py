@@ -45,7 +45,7 @@ def loginPage(request):
             messages.error(request, "No account found with that email.")
             return redirect("login")
 
-        user = authenticate(request, username=user_obj.username, password=password)
+        user = authenticate(request, username=email, password=password)
 
         if user is not None:
             login(request, user)
@@ -65,12 +65,16 @@ def logoutPage(request):
 
 @login_required
 def update_details(request):
-    if request.user.is_authenticated:
-        user = request.user
-    else:
-        return redirect("login")
+    user = request.user
     UserDetail.objects.get_or_create(user=user)
+    
+    next_url = request.POST.get('next') or request.GET.get('next')
+    referrer_url = request.META.get('HTTP_REFERER')
+    print(f"This is the referrer url {referrer_url}")
 
+    if "checkout" in referrer_url:
+        next_url = "/cart/checkout/"
+    
     if request.method == 'POST':
         user_form = UserForm(request.POST, instance=user)
         detail_form = UserDetailForm(request.POST, instance=user.userdetail)
@@ -79,9 +83,15 @@ def update_details(request):
             user_form.save()
             detail_form.save()
             messages.info(request, "Details updated")
+            if next_url:
+                return redirect(next_url)
             return redirect('update_detail')
     else:
         user_form = UserForm(instance=user)
         detail_form = UserDetailForm(instance=user.userdetail)
 
-    return render(request, "accounts/update_detail.html", {"detail_form": detail_form, "user_form": user_form})
+    return render(request, "accounts/update_detail.html", {
+        "detail_form": detail_form, 
+        "user_form": user_form,
+        "next_url": next_url
+    })

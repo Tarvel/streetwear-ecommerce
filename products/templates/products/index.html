@@ -1,70 +1,176 @@
-{% extends 'base.html' %}
-{% block title %}Home{% endblock %}
-{% block content %}
-{% load humanize %}
-{% load static %}
-<section class="antialiased mb-12" aria-labelledby="slideshow-heading">
+{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block content %} {% load humanize %} {% load static %}
+<section
+  class="antialiased mb-12 -mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12"
+  aria-labelledby="slideshow-heading"
+>
   <h2 id="slideshow-heading" class="sr-only">Featured Content Slideshow</h2>
 
   {% if slideshow_images %}
-  <div id="slideshow-container" class="relative group w-full mx-auto rounded-lg shadow-xl overflow-hidden" style="max-width: 1600px;">
+  <div
+    id="slideshow-container"
+    class="relative group w-full rounded-none overflow-hidden"
+  >
     <!-- Slides Wrapper -->
-    <div class="relative w-full h-96 md:h-[550px] lg:h-[650px] bg-dark">
+    <div
+      class="relative w-full h-[60vh] min-h-[280px] max-h-[450px] md:h-[550px] md:max-h-none lg:h-[650px] bg-dark"
+    >
       {% for image in slideshow_images %}
-        <div class="slide absolute inset-0 transition-all duration-1000 ease-in-out
-                    {% if forloop.first %}
-                      opacity-100 scale-100 z-10
-                    {% else %}
-                      opacity-0 scale-95 z-0
-                    {% endif %}">
-          <img src="{{ image.image.url }}" alt="{{ image.name }}" class="w-full h-full object-cover">
-         
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+      <div
+        class="slide absolute inset-0 transition-opacity duration-1000 ease-in-out transform-none {% if forloop.first %} opacity-100 z-10 {% else %} opacity-0 z-0 {% endif %}"
+        style="
+          transform: none !important;
+          -webkit-tap-highlight-color: transparent;
+        "
+      >
+        <!-- Background Image with Subtle Ken Burns Effect -->
+        <img
+          src="{{ image.image.url }}"
+          alt="{{ image.name }}"
+          class="slide-image w-full h-full object-cover pointer-events-none select-none transition-transform duration-[15000ms] ease-linear"
+        />
+
+        <!-- Gradient Overlay: Stronger on left, fading to right for text legibility -->
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"
+        ></div>
+
+        <!-- Content Wrapper: Vertically centered, Left aligned -->
+        <div class="absolute inset-0 flex flex-col justify-center px-6 md:px-16 lg:px-24 z-20">
           
-          <div class="absolute bottom-0 left-0 p-6 md:p-12 text-white">
-            <div class="overflow-hidden">
-              <h3 class="slide-text text-3xl md:text-5xl font-bold font-heading transform transition-transform duration-700 ease-in-out translate-y-full">{{ image.name }}</h3>
-            </div>
-            <div class="overflow-hidden mt-2">
-              <p class="slide-text text-base md:text-lg font-body max-w-xl transform transition-transform duration-700 delay-100 ease-in-out translate-y-full">{{ image.description }}</p>
-            </div>
+          <!-- Title -->
+          <div class="overflow-hidden mb-2 max-w-3xl">
+            <h3
+              class="slide-text text-5xl md:text-7xl lg:text-8xl font-black font-heading uppercase tracking-tighter text-white transform transition-transform duration-700 ease-out translate-y-full drop-shadow-xl leading-none"
+            >
+              {{ image.name }}
+            </h3>
           </div>
+
+          <!-- Description -->
+          <div class="overflow-hidden mb-8 md:mb-10 max-w-xl">
+            <p
+              class="slide-text text-base md:text-xl font-medium font-body text-gray-200 transform transition-transform duration-700 delay-100 ease-out translate-y-full drop-shadow-md leading-relaxed"
+            >
+              {{ image.description }}
+            </p>
+          </div>
+
+          <!-- CTA Button -->
+          <div class="overflow-hidden">
+            <a
+              href="{% url 'shop' %}"
+              class="slide-text inline-flex items-center gap-3 bg-white text-black px-8 py-4 md:px-10 md:py-5 font-black uppercase tracking-[0.2em] text-xs md:text-sm hover:bg-accent hover:text-white transition-all duration-300 delay-200 transform translate-y-full shadow-2xl group/btn"
+            >
+              <span>Shop Now</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </a>
+          </div>
+
         </div>
+      </div>
       {% endfor %}
     </div>
-    
+
     <div id="slideshow-controls" class="hidden">
       <!-- Previous Button -->
-      <button id="prev-slide-btn" aria-label="Previous Slide" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 -translate-x-12 group-hover:translate-x-0">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+      <button
+        id="prev-slide-btn"
+        aria-label="Previous Slide"
+        class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 -translate-x-12 group-hover:translate-x-0"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2.5"
+          stroke="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 19.5L8.25 12l7.5-7.5"
+          />
+        </svg>
       </button>
       <!-- Next Button -->
-      <button id="next-slide-btn" aria-label="Next Slide" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 translate-x-12 group-hover:translate-x-0">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      <button
+        id="next-slide-btn"
+        aria-label="Next Slide"
+        class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 translate-x-12 group-hover:translate-x-0"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2.5"
+          stroke="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M8.25 4.5l7.5 7.5-7.5 7.5"
+          />
+        </svg>
       </button>
     </div>
-    <div id="slideshow-indicators" class="absolute bottom-5 left-1/2 -translate-x-1/2 flex space-x-2">
-    </div>
+    <div
+      id="slideshow-indicators"
+      class="absolute bottom-5 left-1/2 -translate-x-1/2 flex space-x-2"
+    ></div>
   </div>
   {% endif %}
 </section>
 
 <section>
-  <h2 class="text-3xl md:text-4xl font-semibold mb-6 text-center font-heading">New Drops</h2>
+  <h2 class="text-3xl md:text-4xl font-semibold mb-6 text-center font-heading">
+    New Drops
+  </h2>
   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
     {% for product in newest_products %}
-      <div class="border rounded-lg p-3 md:p-4 shadow-md hover:shadow-lg transition group">
-        <a href="{% url 'product_detail' product.slug %}" class="block">
-          <div class="overflow-hidden rounded-md mb-4">
-            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
-          </div>
-          <h3 class="text-lg md:text-xl font-semibold font-heading truncate">{{ product.name }}</h3>
-          <p class="text-gray-600 dark:text-gray-300 font-body">{{ product.drop.name|title}}</p>
-          <b class="text-gray-600 dark:text-gray-300 font-body">₦{{ product.base_price|intcomma }}</b>
-          {% comment %} <small class="text-gray-600 dark:text-gray-300 font-body mb-2">{{ product.stock_quantity }} items left</small> {% endcomment %}
-        </a>
-      </div>
+    <div
+      class="border rounded-lg p-3 md:p-4 -lg transition group"
+    >
+      <a href="{% url 'product_detail' product.slug %}" class="block">
+        <div class="overflow-hidden rounded-md mb-4">
+          <img
+            src="{{ product.image.url }}"
+            alt="{{ product.name }}"
+            class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+        <h3 class="text-lg md:text-xl font-semibold font-heading truncate">
+          {{ product.name }}
+        </h3>
+        <p class="text-gray-600 dark:text-gray-300 font-body">
+          {{ product.drop.name|title}}
+        </p>
+        <b class="text-gray-600 dark:text-gray-300 font-body"
+          >₦{{ product.base_price|intcomma }}</b
+        >
+        {% comment %}
+        <small class="text-gray-600 dark:text-gray-300 font-body mb-2"
+          >{{ product.stock_quantity }} items left</small
+        >
+        {% endcomment %}
+      </a>
+    </div>
     {% endfor %}
   </div>
 </section>
+
+<style>
+  /* Ken Burns / Slow Zoom Effect */
+  .slide.opacity-100 .slide-image {
+    transform: scale(1.05); /* Slightly reduced scale for subtler effect */
+  }
+  
+  /* High contrast accents for streetwear aesthetic */
+  .font-heading {
+    letter-spacing: -0.02em;
+  }
+</style>
 {% endblock %}

@@ -1,0 +1,18 @@
+<div id="payment-status-container" 
+     class="text-center p-6 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 transition-all duration-500 ease-in-out">
+    <div class="flex items-center justify-center space-x-3 text-green-600 dark:text-green-400">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span class="font-body font-bold text-lg">Payment Successful!</span>
+    </div>
+    <p class="mt-2 text-sm text-green-500 dark:text-green-300 font-body">
+        Transaction confirmed. Your order is now being processed.
+    </p>
+    {% if payment %}
+    <div class="mt-4 pt-4 border-t border-green-100 dark:border-green-800 text-left text-xs text-green-600 dark:text-green-400">
+        <strong>Reference:</strong> {{ payment.payment_reference }}<br>
+        <strong>Paid at:</strong> {{ payment.paid_at|date:"M d, Y H:i" }}
+    </div>
+    {% endif %}
+</div>

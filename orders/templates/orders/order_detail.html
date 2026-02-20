@@ -1,152 +1,257 @@
-{% extends 'base.html' %}
-{% block title %}Order Details #{{ order.id }}{% endblock %}
-{% block content %}
-{% load humanize %}
+{% extends 'base.html' %} {% block title %}Order Details #{{ order.id }}{% endblock %} {% block content %} {% load humanize %}
 
-<section class="bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-  <div class="max-w-4xl mx-auto">
+<section class="max-w-5xl mx-auto px-4 py-12">
+  <!-- Header Section -->
+  <div class="mb-12">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <a
+          href="{% url 'order-history' %}"
+          class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black dark:hover:text-white transition-colors mb-4 inline-block"
+        >
+          <i class="fas fa-arrow-left mr-2"></i> Back to History
+        </a>
+        <h1 class="text-3xl font-black uppercase tracking-tighter mb-2">
+          Order #{{ order.id }}
+        </h1>
+        <p class="text-gray-400 text-sm">
+          Placed on {{ order.created_at|date:"M j, Y" }} at {{ order.created_at|time:"g:i A" }}
+        </p>
+      </div>
 
-    <!-- Page Heading -->
-    <div class="mb-10 md:mb-12">
-      <h2 class="text-3xl sm:text-4xl font-bold font-heading text-center">Order Details</h2>
-      <p class="text-gray-600 dark:text-gray-400 font-body text-lg text-center mt-2">
-        Reviewing order <span class="font-semibold text-gray-800 dark:text-gray-200">#{{ order.id }}</span>
-      </p>
+      <div class="flex items-center gap-3">
+        <span
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-xs font-bold uppercase tracking-wider {% if order.status == 'paid' or order.status == 'Delivered' %} text-green-600 {% elif order.status == 'failed' or order.status == 'cancelled' %} text-red-600 {% elif order.status == 'shipped' %} text-blue-600 {% else %} text-yellow-600 {% endif %}"
+        >
+          <span class="w-2 h-2 rounded-full bg-current"></span>
+          {{ order.get_status_display }}
+        </span>
+      </div>
     </div>
+  </div>
 
-    <!-- Main Order Details Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-      
-      <!-- Card Header: Summary -->
-      <div class="p-6 md:p-8 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
-          <p class="font-body text-sm text-gray-500 dark:text-gray-400">Order Placed</p>
-          <p class="font-heading font-semibold text-gray-800 dark:text-gray-100">{{ order.created_at|date:"F j, Y" }}</p>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    <!-- Left Column: Items and Summary -->
+    <div class="lg:col-span-2 space-y-8">
+      <!-- Items List -->
+      <div
+        class="border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden"
+      >
+        <div
+          class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50"
+        >
+          <h3 class="text-sm font-black uppercase tracking-widest">Items</h3>
         </div>
-        <div class="text-left sm:text-right">
-            <p class="font-body text-sm text-gray-500 dark:text-gray-400">Status</p>
-            <!-- Status Badge using your model's choices -->
-            <span class="
-                inline-block mt-1 font-semibold text-xs py-1 px-3 rounded-full
-                {% if order.status == 'shipped' %} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                {% elif order.status == 'paid' or order.status == 'pending' %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300
-                {% elif order.status == 'failed' or order.status == 'cancelled' %} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                {% else %} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 {% endif %}
-            ">
-                {{ order.status|title }}
-            </span>
-        </div>
-      </div>
-
-      <!-- Card Body: Item List -->
-      <div class="p-6 md:p-8">
-        <div class="space-y-4">
-            {% for item in order.items.all %}
-            <!-- Item Row: Stacks on mobile, row on desktop -->
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center py-4 {% if not forloop.last %}border-b border-gray-200 dark:border-gray-700{% endif %}">
-                <!-- Item Details -->
-                <div>
-                    <p class="font-body font-semibold text-gray-800 dark:text-gray-100">{{ item.variant.product.name }}</p>
-                    <p class="font-body text-sm text-gray-500 dark:text-gray-400">
-                        {% if item.variant.size != "NA" %}{{ item.variant.size }}{% endif %}
-                        {% if item.variant.size != "NA" and item.variant.colour %} - {% endif %}
-                        {% if item.variant.colour %}{{ item.variant.colour|title }}{% endif %}
-                    </p>
-                    <p class="font-body text-sm text-gray-500 dark:text-gray-400 mt-1 sm:hidden">Qty: {{ item.quantity }}</p>
+        <div class="divide-y divide-gray-100 dark:divide-gray-800">
+          {% for item in order.items.all %}
+          <div class="p-6 flex items-center gap-6">
+            <!-- Product Image with Quantity Badge -->
+            <div class="flex-shrink-0 relative p-1">
+              <div
+                class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-800"
+              >
+                {% if item.variant.image %}
+                <img
+                  src="{{ item.variant.image.url }}"
+                  alt="{{ item.variant.product.name }}"
+                  class="w-full h-full object-cover"
+                />
+                {% elif item.variant.product.image %}
+                <img
+                  src="{{ item.variant.product.image.url }}"
+                  alt="{{ item.variant.product.name }}"
+                  class="w-full h-full object-cover"
+                />
+                {% else %}
+                <div
+                  class="w-full h-full flex items-center justify-center text-gray-300"
+                >
+                  <i class="fas fa-image text-2xl"></i>
                 </div>
-                <!-- Price and Quantity -->
-                <div class="font-body font-semibold text-gray-800 dark:text-gray-100 mt-2 sm:mt-0 text-left sm:text-right">
-                    <p>₦{{ item.price|intcomma }}</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 font-normal hidden sm:block">Qty: {{ item.quantity }}</p>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <!-- Total Section -->
-        <div class="flex justify-between items-center pt-6 mt-6 border-t-2 border-gray-200 dark:border-gray-700">
-            <p class="text-lg font-semibold font-heading">Total</p>
-            <p class="text-xl font-bold font-heading text-accent">₦{{ order.total_amount|intcomma }}</p>
-        </div>
-      </div>
-
-      <!-- Card Footer: Shipping and Payment Info -->
-      <div class="bg-gray-50 dark:bg-gray-800/50 p-6 md:p-8 rounded-b-xl grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Shipping Details -->
-        <div class="space-y-3 font-body text-sm text-gray-600 dark:text-gray-300">
-            <h4 class="font-heading text-lg font-semibold text-gray-900 dark:text-white mb-2">Shipping Details</h4>
-            <div>
-                <strong class="text-gray-800 dark:text-gray-100">Address:</strong><br>
-                {{ order.shipping_address|linebreaksbr }}
-            </div>
-            <div>
-                <strong class="text-gray-800 dark:text-gray-100">Contact:</strong> {{ user.userdetail.phone_number }}
-            </div>
-        </div>
-
-        <!-- Payment Details -->
-        <div class="space-y-3 font-body text-sm text-gray-600 dark:text-gray-300">
-            <h4 class="font-heading text-lg font-semibold text-gray-900 dark:text-white mb-2">Payment Details</h4>
-            {% for payment in order.payments.all %}
-                {% if payment.status == "success" %}
-                    <div>
-                        <strong class="text-gray-800 dark:text-gray-100">Payment Ref:</strong> {{ payment.payment_reference }}
-                    </div>
-                    <div>
-                        <strong class="text-gray-800 dark:text-gray-100">Paid On:</strong> {{ payment.paid_at|date:"F j, Y, P" }}
-                    </div>
-                    <div>
-                        <strong class="text-gray-800 dark:text-gray-100">Payment Status:</strong> <span class="text-green-600 dark:text-green-400 font-semibold">{{ payment.status|title }}</span>
-                    </div>
                 {% endif %}
-            {% endfor %}
+              </div>
+              <span
+                class="absolute top-0 right-0 bg-black dark:bg-white text-white dark:text-black text-[12px] font-black w-6 h-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-900 ring-1 ring-black/5"
+              >
+                {{ item.quantity }}
+              </span>
+            </div>
+
+            <!-- Item Info -->
+            <div class="flex-grow">
+              <h4 class="font-bold text-lg tracking-tight leading-tight mb-1">
+                {{ item.variant.product.name }}
+              </h4>
+              <div
+                class="text-sm text-gray-500 uppercase tracking-wider font-medium space-x-2"
+              >
+                {% if item.variant.size != "NA" %}<span
+                  >{{ item.variant.size }}</span
+                >{% endif %} {% if item.variant.colour %}<span
+                  class="text-gray-300"
+                  >|</span
+                ><span>{{ item.variant.colour }}</span>{% endif %}
+              </div>
+            </div>
+
+            <!-- Price -->
+            <div class="text-right">
+              <p class="font-bold text-lg">₦{{ item.subtotal|intcomma }}</p>
+              <p
+                class="text-[10px] text-gray-400 uppercase tracking-widest font-bold"
+              >
+                ₦{{ item.price|intcomma }} ea
+              </p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <!-- Order Footer / Totals -->
+        <div
+          class="p-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800"
+        >
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-black uppercase tracking-widest"
+              >Total Amount</span
+            >
+            <span class="text-2xl font-black tracking-tighter"
+              >₦{{ order.total_amount|intcomma }}</span
+            >
+          </div>
         </div>
       </div>
-    </div>
-    
-    <!-- Action Buttons -->
-    <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mt-8">
-      <a href="{% url 'order-history' %}" class="w-full sm:w-auto text-center font-body font-semibold text-gray-800 border border-gray-800 hover:border-gray-800 py-3 px-6 rounded-lg hover:bg-gray-800  hover:text-white transition-colors duration-300">
-        ← Back to Order History
-      </a>
-      
-      {% if order.payments.all or show_retry_button %}
-  {% for payment in order.payments.all %}
-    {% if payment.status == "failed" or show_retry_button %}
-      <a href="{% url 'payment-retry' order.order_id %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-accent transition-colors duration-300">
-            Retry Payment
+
+      <!-- Logic for Retry/Continue Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 pt-4">
+        {% if order.status == 'pending' or order.status == 'failed' %}
+        <a
+          href="{% url 'payment-retry' order.order_id %}"
+          class="flex-1 text-center bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-black uppercase tracking-widest hover:opacity-90 transition-opacity shadow-xl"
+        >
+          Retry Payment
         </a>
         {% else %}
-            <a href="{% url 'shop' %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-accent transition-colors duration-300">
-                Continue Shopping
-            </a>
-    {% endif %}
-  {% empty %}
-    {% if show_retry_button %}
-      <a href="{% url 'payment-retry' order.order_id %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-accent transition-colors duration-300">
-            Retry Payment
+        <a
+          href="{% url 'shop' %}"
+          class="flex-1 text-center bg-black dark:bg-white text-white dark:text-black py-4 rounded-lg font-black uppercase tracking-widest hover:opacity-90 transition-opacity"
+        >
+          Continue Shopping
         </a>
-      {% else %}
-            <a href="{% url 'shop' %}" class="w-full sm:w-auto text-center font-body font-semibold bg-gray-800 text-white py-3 px-6 rounded-lg hover:bg-accent transition-colors duration-300">
-                Continue Shopping
-            </a>
-    {% endif %}
-  {% endfor %}
-{% endif %}
-      
-      <!-- 
-        OPTIONAL: Add a tracking button if the order is shipped and has a tracking number.
-        Uncomment this block and add 'tracking_number' and 'tracking_url' to your Order model.
-      -->
-      <!--
-      {% if order.status == 'shipped' and order.tracking_number %}
-      <a href="{{ order.tracking_url }}" target="_blank" class="w-full sm:w-auto text-center font-body font-semibold bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300">
-        Track Your Order
-      </a>
-      {% endif %}
-      -->
+        {% endif %}
+      </div>
     </div>
 
+    <!-- Right Column: Shipping & Payment -->
+    <div class="space-y-8">
+      <!-- Shipping Section -->
+      <div
+        class="border border-gray-100 dark:border-gray-800 rounded-lg p-6 space-y-4"
+      >
+        <h3
+          class="text-sm font-black uppercase tracking-widest border-b border-gray-100 dark:border-gray-800 pb-3"
+        >
+          Shipping
+        </h3>
+        <div class="space-y-4">
+          <div>
+            <p
+              class="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-1"
+            >
+              Address
+            </p>
+            <p
+              class="text-sm tracking-tight leading-relaxed text-gray-700 dark:text-gray-300"
+            >
+              {{ order.shipping_address|linebreaksbr }}
+            </p>
+          </div>
+          <div>
+            <p
+              class="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-1"
+            >
+              Contact
+            </p>
+            <p class="text-sm font-bold tracking-tight">
+              {{ order.user.userdetail.phone_number|default:"N/A" }}
+            </p>
+            <p class="text-sm text-gray-500">
+              {{ order.user.email|default:order.user.username }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Section -->
+      <div
+        class="border border-gray-100 dark:border-gray-800 rounded-lg p-6 space-y-4"
+      >
+        <h3
+          class="text-sm font-black uppercase tracking-widest border-b border-gray-100 dark:border-gray-800 pb-3"
+        >
+          Payment
+        </h3>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <span
+              class="text-[10px] text-gray-400 uppercase tracking-widest font-black"
+              >Method</span
+            >
+            <span class="text-xs font-bold uppercase tracking-tight"
+              >Paystack</span
+            >
+          </div>
+          {% for payment in order.payments.all %}
+          <div
+            class="pt-4 border-t border-gray-50 dark:border-gray-800 space-y-2"
+          >
+            <div class="flex justify-between items-center">
+              <span
+                class="text-[10px] text-gray-400 uppercase tracking-widest font-black"
+                >Ref</span
+              >
+              <span class="text-[10px] font-mono font-medium"
+                >{{ payment.payment_reference|truncatechars:12 }}</span
+              >
+            </div>
+            <div class="flex justify-between items-center">
+              <span
+                class="text-[10px] text-gray-400 uppercase tracking-widest font-black"
+                >Date</span
+              >
+              <span class="text-[10px] font-medium"
+                >{{ payment.paid_at|date:"M j, Y" }}</span
+              >
+            </div>
+            <div class="flex justify-between items-center">
+              <span
+                class="text-[10px] text-gray-400 uppercase tracking-widest font-black"
+                >Status</span
+              >
+              <span
+                class="text-[10px] font-bold uppercase tracking-widest {% if payment.status == 'success' %}text-green-600{% else %}text-red-500{% endif %}"
+              >
+                {{ payment.status }}
+              </span>
+            </div>
+          </div>
+          {% endfor %} {% if not order.payments.all %}
+          <p class="text-xs text-gray-400 italic">No payment record found.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Support Section -->
+      <div class="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <p class="text-xs text-gray-500 tracking-tight leading-relaxed">
+          Need help with your order? <br />
+          <a
+            href="{% url 'contact' %}"
+            class="font-bold text-black dark:text-white hover:underline"
+            >Contact support</a
+          >
+        </p>
+      </div>
+    </div>
   </div>
 </section>
 
